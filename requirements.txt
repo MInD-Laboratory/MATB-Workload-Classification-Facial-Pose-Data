@@ -1,0 +1,41 @@
+# Core scientific computing
+numpy>=1.21.0
+pandas>=1.3.0
+scipy>=1.7.0
+
+# Data visualization
+matplotlib>=3.4.0
+seaborn>=0.11.0
+
+# Progress tracking
+tqdm>=4.62.0
+
+# Jupyter notebook support
+jupyter>=1.0.0
+ipykernel>=6.0.0
+
+# Additional utilities for data processing
+scikit-learn>=1.0.0
+statsmodels>=0.12.0
+
+# Optional: For advanced plotting
+plotly>=5.0.0
+
+# Future modules (commented out for now)
+# For ECG analysis:
+# neurokit2>=0.2.0
+# heartpy>=1.2.7
+
+# For GSR analysis:
+# bioread>=3.0.0
+# pyedflib>=0.1.0
+
+# For eye-tracking analysis:
+# pymovements>=0.1.0
+# eyetracking>=0.1.0
+
+# For modeling:
+# tensorflow>=2.8.0
+# torch>=1.11.0
+# xgboost>=1.5.0
+# lightgbm>=3.3.0

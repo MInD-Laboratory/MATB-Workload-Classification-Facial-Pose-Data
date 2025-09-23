@@ -1,20 +1,16 @@
 # Facial Pose Analysis Pipeline
 
-A modular pipeline for processing and analyzing facial pose data from OpenPose landmark detection. This codebase provides tools for quality control, feature extraction, and statistical analysis of facial pose data.
+Modular tools for processing facial pose data from OpenPose landmark detection.
 
-## Overview
+## Capabilities
 
-This pipeline transforms raw OpenPose facial landmark data into analysis-ready features. The code is modular and documented for reproducibility.
+- Quality control analysis with automated bad window detection
+- Coordinate normalization using Procrustes alignment or eye-corner stabilization
+- Feature extraction for facial expressions, head pose, and gaze
+- Temporal filtering with Butterworth filters
+- Statistical analysis and group comparisons
+- Data visualization and report generation
 
-### Key Features
-
-- **Quality Control**: Automated detection and masking of unreliable data periods
-- **Coordinate Normalization**: Procrustes alignment and original stabilization methods
-- **Feature Extraction**: Individual functions for each facial feature (blinks, mouth movement, head pose)
-- **Temporal Filtering**: Butterworth and other filters for noise reduction
-- **Statistical Analysis**: Comprehensive statistics and normalization options
-- **Visualization**: Research-quality plots and figures
-- **Reproducibility**: Detailed documentation and parameter tracking
 
 ## Directory Structure
 
@@ -40,76 +36,64 @@ Pose/
 
 ## Usage
 
-Run the complete analysis by executing `pose_analysis.ipynb` or use the pipeline functions directly:
+Execute `pose_analysis.ipynb` or call pipeline functions directly.
 
-```python
-from utils.pipeline import run_complete_pose_pipeline
+## Features
 
-output_paths = run_complete_pose_pipeline(
-    raw_input_dir="data/raw_pose",
-    output_base_dir="data/processed",
-    coordinate_system="procrustes",
-    apply_temporal_filter=True,
-    cutoff_frequency=10.0
-)
-```
+- Eye aspect ratio (blink detection)
+- Mouth opening distance
+- Head rotation angle
+- Face center coordinates and movement
+- Eye region coordinates
+- Pupil/gaze position and deviation
+- Landmark confidence scores
 
-## Features Extracted
+## Processing
 
-- **Eye Aspect Ratio**: `blink_dist` - Eye closure measurement
-- **Mouth Opening**: `mouth_dist` - Lip separation distance
-- **Head Rotation**: `head_rotation_angle` - Head orientation
-- **Face Center**: `center_face_x`, `center_face_y`, `center_face_magnitude`
-- **Eye Regions**: `left_eye_*`, `right_eye_*` coordinates
-- **Pupil/Gaze**: `avg_pupil_*` - Gaze position and deviation
-- **Quality Indicators**: Landmark detection confidence scores
+1. Quality control with window-based analysis
+2. Coordinate normalization (Procrustes or eye-corner)
+3. Feature extraction from landmarks
+4. Temporal filtering
+5. Statistical analysis
 
-## Processing Steps
+## Functions
 
-1. **Quality Control**: Window-based analysis with confidence thresholding
-2. **Coordinate Normalization**: Procrustes alignment or eye-corner stabilization
-3. **Feature Extraction**: Facial expression and movement features
-4. **Temporal Filtering**: Butterworth low-pass filtering
-5. **Statistical Analysis**: Group comparisons and visualization
+**Quality Control**
+- `run_quality_control_batch()` - Batch quality analysis
+- `analyze_file_quality()` - Single file analysis
+- `summarize_quality_control()` - Quality summaries
 
-## Function Documentation
+**Feature Extraction**
+- `extract_all_features()` - All facial features
+- `extract_eye_aspect_ratio()` - Eye closure
+- `extract_mouth_opening()` - Mouth movement
+- `extract_head_rotation()` - Head pose
+- `extract_pupil_features()` - Gaze tracking
 
-### Quality Control Functions
-- `run_quality_control_batch()`: Analyze data quality across files
-- `analyze_file_quality()`: Single file quality analysis
-- `summarize_quality_control()`: Generate quality summaries
+**Coordinate Normalization**
+- `compute_procrustes_alignment()` - Procrustes alignment
+- `compute_original_alignment()` - Eye-corner stabilization
 
-### Feature Extraction Functions
-- `extract_all_features()`: Extract all facial features
-- `extract_eye_aspect_ratio()`: Eye closure measurements
-- `extract_mouth_opening()`: Mouth movement features
-- `extract_head_rotation()`: Head pose features
-- `extract_pupil_features()`: Gaze tracking features
+**Statistical Analysis**
+- `calculate_summary_statistics()` - Descriptive statistics
+- `compare_groups_statistical()` - Group comparisons
+- `perform_feature_analysis()` - Complete analysis
+- `apply_z_score_normalization()` - Z-score normalization
 
-### Coordinate Normalization Functions
-- `compute_procrustes_alignment()`: Procrustes shape alignment
-- `compute_original_alignment()`: Eye-corner stabilization
+**Data Loading**
+- `load_pose_data_with_conditions()` - Load with conditions
+- `parse_condition_mapping()` - Map conditions
+- `prepare_data_for_statistical_analysis()` - Prepare for analysis
 
-### Statistical Analysis Functions
-- `calculate_summary_statistics()`: Descriptive statistics
-- `compare_groups_statistical()`: Group comparisons
-- `perform_feature_analysis()`: Complete statistical analysis
-- `apply_z_score_normalization()`: Z-score normalization
+**Visualization**
+- `plot_qc_summary()` - Quality control plots
+- `plot_feature_timeseries()` - Time series plots
+- `plot_statistical_bars()` - Statistical plots
+- `plot_correlation_matrix()` - Correlation plots
 
-### Data Loading Functions
-- `load_pose_data_with_conditions()`: Load data with experimental conditions
-- `parse_condition_mapping()`: Map participant trials to conditions
-- `prepare_data_for_statistical_analysis()`: Prepare data for analysis
+## Outputs
 
-### Visualization Functions
-- `plot_qc_summary()`: Quality control visualizations
-- `plot_feature_timeseries()`: Feature time series plots
-- `plot_statistical_bars()`: Statistical comparison plots
-- `plot_correlation_matrix()`: Feature correlation plots
-
-## Output Files
-
-- **Feature Data**: `feature_data/*.csv` - Extracted features per participant/trial
-- **Quality Control**: `quality_control/*.csv` - Data quality assessments
-- **Reports**: `reports/*.csv` - Processing summaries and logs
-- **Figures**: `output/figures/*.png` - Statistical plots and visualizations
+- `feature_data/*.csv` - Extracted features
+- `quality_control/*.csv` - Quality assessments
+- `reports/*.csv` - Processing logs
+- `output/figures/*.png` - Plots and visualizations

@@ -23,6 +23,11 @@ from typing import Dict, Tuple, List, Optional
 
 from .landmark_config import (
     ANCHOR_L, ANCHOR_R,
+    EYES,
+    MOUTH_TOP_ALT, MOUTH_BOTTOM_ALT,
+    LEFT_PUPIL, RIGHT_PUPIL,
+    FACIAL_REGIONS,
+    NOSE_BRIDGE_INDICES,
     PROCRUSTES_REFERENCE_LANDMARKS,
     get_column_name,
     get_procrustes_column_name
@@ -240,8 +245,50 @@ def procrustes_analysis(reference_shape: np.ndarray, target_shape: np.ndarray) -
     return aligned_shape, scale, R, translation
 
 
+def get_landmarks_used_in_features() -> List[int]:
+    """
+    Get all landmark indices that are actually used in feature extraction.
+    """
+    landmarks_used = set()
+    
+    # Eye landmarks for blink detection
+    if 'EYES' in globals():
+        landmarks_used.update(EYES.get("L", []))
+        landmarks_used.update(EYES.get("R", []))
+    
+    # Anchor points
+    if 'ANCHOR_L' in globals():
+        landmarks_used.add(ANCHOR_L)
+    if 'ANCHOR_R' in globals():
+        landmarks_used.add(ANCHOR_R)
+    
+    # Mouth landmarks
+    if 'MOUTH_TOP_ALT' in globals():
+        landmarks_used.add(MOUTH_TOP_ALT)
+    if 'MOUTH_BOTTOM_ALT' in globals():
+        landmarks_used.add(MOUTH_BOTTOM_ALT)
+    
+    # Pupil landmarks
+    if 'LEFT_PUPIL' in globals():
+        landmarks_used.add(LEFT_PUPIL)
+    if 'RIGHT_PUPIL' in globals():
+        landmarks_used.add(RIGHT_PUPIL)
+    
+    # Regional landmarks
+    if 'FACIAL_REGIONS' in globals():
+        for region_landmarks in FACIAL_REGIONS.values():
+            landmarks_used.update(region_landmarks)
+    
+    # Nose landmarks (for pupil relative features)
+    if 'NOSE_BRIDGE_INDICES' in globals():
+        landmarks_used.update(NOSE_BRIDGE_INDICES)
+    
+    return sorted(list(landmarks_used))
+
+
 def compute_procrustes_alignment(df: pd.DataFrame,
-                                reference_landmarks: Optional[List[int]] = None) -> pd.DataFrame:
+                                reference_landmarks: Optional[List[int]] = None,
+                                landmarks_to_transform: Optional[List[int]] = None) -> pd.DataFrame:
     """
     Apply Procrustes alignment to all landmarks in a DataFrame.
 
@@ -275,40 +322,40 @@ def compute_procrustes_alignment(df: pd.DataFrame,
     if reference_landmarks is None:
         reference_landmarks = PROCRUSTES_REFERENCE_LANDMARKS
 
-    # Check if we have required columns
-    x_cols = [get_column_name(i, 'x') for i in reference_landmarks]
-    y_cols = [get_column_name(i, 'y') for i in reference_landmarks]
-    required_cols = x_cols + y_cols
+    if landmarks_to_transform is None:
+        landmarks_to_transform = get_landmarks_used_in_features()
 
-    # Find which columns actually exist
-    available_cols = [col for col in required_cols if col in df.columns]
-    if len(available_cols) < 6:  # Need at least 3 points (6 coordinates)
-        print(f"Warning: Not enough landmark columns for Procrustes alignment. "
-              f"Found {len(available_cols)//2} points, need at least 3.")
-        return df
+    available_landmarks_to_transform = []
+    for landmark in landmarks_to_transform:
+        x_col = get_column_name(landmark, 'x')
+        y_col = get_column_name(landmark, 'y')
+        if x_col in df.columns and y_col in df.columns:
+            available_landmarks_to_transform.append(landmark)
+    print(f"Transforming {len(available_landmarks_to_transform)} feature-relevant landmarks")
 
-    # Find which landmarks we actually have data for
-    available_landmarks = []
+    # Check reference landmark availability
+    available_ref_landmarks = []
     for i in reference_landmarks:
         x_col = get_column_name(i, 'x')
         y_col = get_column_name(i, 'y')
         if x_col in df.columns and y_col in df.columns:
-            available_landmarks.append(i)
+            available_ref_landmarks.append(i)
 
-    if len(available_landmarks) < 3:
-        print("Warning: Need at least 3 complete landmarks for Procrustes alignment.")
+    if len(available_ref_landmarks) < 3:
+        print(f"Warning: Need at least 3 reference landmarks, found {len(available_ref_landmarks)}")
         return df
 
     # Extract landmark coordinates into 3D array: (frames, landmarks, coordinates)
     n_frames = len(df)
-    n_landmarks = len(available_landmarks)
+    n_ref_landmarks = len(available_ref_landmarks)
+    ref_coords = np.zeros((n_frames, n_ref_landmarks, 2))
+    valid_frames = np.ones(n_frames, dtype=bool)
 
     coords = np.zeros((n_frames, n_landmarks, 2))
     valid_frames = np.ones(n_frames, dtype=bool)
 
-    # Fill coordinate array and track which frames have complete data
     for frame_idx in range(n_frames):
-        for lm_idx, landmark in enumerate(available_landmarks):
+        for lm_idx, landmark in enumerate(available_ref_landmarks):
             x_val = df.loc[frame_idx, get_column_name(landmark, 'x')]
             y_val = df.loc[frame_idx, get_column_name(landmark, 'y')]
 
@@ -316,12 +363,11 @@ def compute_procrustes_alignment(df: pd.DataFrame,
                 valid_frames[frame_idx] = False
                 break
 
-            coords[frame_idx, lm_idx, 0] = x_val
-            coords[frame_idx, lm_idx, 1] = y_val
+            ref_coords[frame_idx, lm_idx, 0] = x_val
+            ref_coords[frame_idx, lm_idx, 1] = y_val
 
-    # Check if we have any valid frames
     if valid_frames.sum() == 0:
-        print("Warning: No frames with complete landmark data for Procrustes alignment.")
+        print("Warning: No frames with complete reference data")
         return df
 
     # Calculate reference shape (average of all valid frames)
@@ -330,41 +376,62 @@ def compute_procrustes_alignment(df: pd.DataFrame,
     # Apply Procrustes alignment to each frame
     df_aligned = df.copy()
 
-    print(f"Applying Procrustes alignment to {n_frames} frames using {n_landmarks} landmarks...")
-
-    # Process each frame
+    # Process each frame - but only transform the landmarks we need
     for frame_idx in range(n_frames):
         if not valid_frames[frame_idx]:
-            # Set aligned coordinates to NaN for frames with missing data
-            for landmark in available_landmarks:
+            # Set only the landmarks we're transforming to NaN
+            for landmark in available_landmarks_to_transform:
                 df_aligned.loc[frame_idx, get_procrustes_column_name(landmark, 'x')] = np.nan
                 df_aligned.loc[frame_idx, get_procrustes_column_name(landmark, 'y')] = np.nan
             continue
 
-        # Get current frame's shape
-        current_shape = coords[frame_idx]
-
         try:
-            # Apply Procrustes transformation
-            aligned_shape, scale, rotation, translation = procrustes_analysis(
-                reference_shape, current_shape
+            # Get transformation from reference landmarks
+            current_ref_shape = ref_coords[frame_idx]
+            aligned_ref_shape, scale, rotation, translation = procrustes_analysis(
+                reference_shape, current_ref_shape
             )
 
-            # Store aligned coordinates in new columns
-            for lm_idx, landmark in enumerate(available_landmarks):
-                x_proc_col = get_procrustes_column_name(landmark, 'x')
-                y_proc_col = get_procrustes_column_name(landmark, 'y')
-                df_aligned.loc[frame_idx, x_proc_col] = aligned_shape[lm_idx, 0]
-                df_aligned.loc[frame_idx, y_proc_col] = aligned_shape[lm_idx, 1]
+            # Calculate transformation parameters
+            orig_ref_centroid = current_ref_shape.mean(axis=0)
+            target_ref_centroid = reference_shape.mean(axis=0)
+
+            # Apply transformation to only the landmarks we need for features
+            for landmark in available_landmarks_to_transform:
+                x_col = get_column_name(landmark, 'x')
+                y_col = get_column_name(landmark, 'y')
+                
+                orig_x = df.loc[frame_idx, x_col]
+                orig_y = df.loc[frame_idx, y_col]
+                
+                if not (pd.isna(orig_x) or pd.isna(orig_y)):
+                    # Apply transformation
+                    centered_x = orig_x - orig_ref_centroid[0]
+                    centered_y = orig_y - orig_ref_centroid[1]
+                    
+                    scaled_x = centered_x * scale
+                    scaled_y = centered_y * scale
+                    
+                    rotated_x = rotation[0, 0] * scaled_x + rotation[0, 1] * scaled_y
+                    rotated_y = rotation[1, 0] * scaled_x + rotation[1, 1] * scaled_y
+                    
+                    final_x = rotated_x + target_ref_centroid[0]
+                    final_y = rotated_y + target_ref_centroid[1]
+                    
+                    # Store result
+                    df_aligned.loc[frame_idx, get_procrustes_column_name(landmark, 'x')] = final_x
+                    df_aligned.loc[frame_idx, get_procrustes_column_name(landmark, 'y')] = final_y
+                else:
+                    df_aligned.loc[frame_idx, get_procrustes_column_name(landmark, 'x')] = np.nan
+                    df_aligned.loc[frame_idx, get_procrustes_column_name(landmark, 'y')] = np.nan
 
         except Exception as e:
-            print(f"Warning: Procrustes alignment failed for frame {frame_idx}: {e}")
-            # Set to NaN on failure
-            for landmark in available_landmarks:
+            print(f"Warning: Frame {frame_idx} transformation failed: {e}")
+            for landmark in available_landmarks_to_transform:
                 df_aligned.loc[frame_idx, get_procrustes_column_name(landmark, 'x')] = np.nan
                 df_aligned.loc[frame_idx, get_procrustes_column_name(landmark, 'y')] = np.nan
 
-    print(f"Procrustes alignment completed. Added _proc columns for {len(available_landmarks)} landmarks.")
+    print(f"Procrustes alignment completed for {len(available_landmarks_to_transform)} feature landmarks")
     return df_aligned
 
 

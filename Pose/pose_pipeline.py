@@ -62,14 +62,14 @@ except Exception:
     SCIPY_AVAILABLE = False
 
 # ---------------------- FLAGS: choose what to run -----------------------------
-RUN_FILTER          = False   # Step 2
-RUN_MASK            = False   # Step 3
-RUN_INTERP_FILTER   = False   # Step 4
-RUN_NORM            = False   # Step 5
-RUN_TEMPLATES       = False   # Step 6
-RUN_FEATURES_PROCRUSTES_GLOBAL      = False   # Step 7A (global template)
-RUN_FEATURES_PROCRUSTES_PARTICIPANT = False   # Step 7A (participant template)
-RUN_FEATURES_ORIGINAL               = False   # Step 7B (no template)
+RUN_FILTER          = True   # Step 2
+RUN_MASK            = True   # Step 3
+RUN_INTERP_FILTER   = True   # Step 4
+RUN_NORM            = True   # Step 5
+RUN_TEMPLATES       = True   # Step 6
+RUN_FEATURES_PROCRUSTES_GLOBAL      = True   # Step 7A (global template)
+RUN_FEATURES_PROCRUSTES_PARTICIPANT = True   # Step 7A (participant template)
+RUN_FEATURES_ORIGINAL               = True   # Step 7B (no template)
 RUN_LINEAR          = True   # Step 8
 SCALE_BY_INTEROCULAR = True  # Step 8: scale distance-like metrics by interocular; set False to disable
 

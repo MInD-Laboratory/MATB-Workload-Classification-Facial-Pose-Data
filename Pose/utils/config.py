@@ -11,7 +11,7 @@ except Exception:
 
 @dataclass
 class Config:
-    RAW_DIR: str = os.getenv("POSE_RAW_DIR", "data/raw")
+    RAW_DIR: str = os.getenv("POSE_RAW_DIR", "data/raw_examples")
     OUT_BASE: str = os.getenv("POSE_OUT_BASE", "data/processed")
     FPS: int = 60
     IMG_WIDTH: int = 2560

@@ -92,8 +92,8 @@ OVERWRITE_TEMPLATES     = False  # if False and templates exist, reuse them
 @dataclass
 class Config:
     # IO
-    RAW_DIR: str = "data/raw/experimental"
-    OUT_BASE: str = "data/processed/experimental"
+    RAW_DIR: str = "data/raw"
+    OUT_BASE: str = "data/processed"
 
     # Sampling
     FPS: int = 60

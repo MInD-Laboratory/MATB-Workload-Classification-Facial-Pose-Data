@@ -44,3 +44,9 @@ Pose/output/figures/sample_features_comparison.png
 Pose/output/figures/sample_features.png
 PNAS_Draft.pdf
 Pose/data/raw
+Pose/data/processed/interp_filtered
+Pose/data/processed/masked
+Pose/data/processed/norm_screen
+Pose/data/processed/templates
+Pose/data/processed/reduced
+Pose/data/processed/features

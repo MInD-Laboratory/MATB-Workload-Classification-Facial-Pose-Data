@@ -9,9 +9,9 @@ Modular tools for processing facial pose data from OpenPose landmark detection.
 4. Normalize to screen (default 2560×1440)
 5. Build templates (global + per-participant)
 6. Extract features:
-7. Procrustes vs global template (windowed)
-8. Procrustes vs participant template (windowed)
-9. Original (no Procrustes) features (windowed)
+    - Procrustes vs global template (windowed)
+    - Procrustes vs participant template (windowed)
+    - Original (no Procrustes) features (windowed)
 10. Drop windows containing any NaNs per metric
 11. Compute linear metrics (mean |vel|, mean |acc|, RMS) per window
 12. Save a JSON summary (config, masking stats, window drops, errors)

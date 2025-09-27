@@ -283,20 +283,37 @@ def original_features_for_file(df_norm: pd.DataFrame) -> Dict[str, np.ndarray]:
                      (dL + dR) / 2.0,
                      np.where(np.isfinite(dL), dL,                # only left valid → left
                               np.where(np.isfinite(dR), dR, np.nan)))  # only right valid → right, else NaN
-
+    
     # Center-face magnitude (dispersion of central face landmarks around their mean)
-    nose_x = [col(i, "x").values for i in CFG.CENTER_FACE]        # x arrays of chosen center-face landmarks
-    nose_y = [col(i, "y").values for i in CFG.CENTER_FACE]        # y arrays of chosen center-face landmarks
-    nose_x = np.vstack(nose_x) if len(nose_x) else np.empty((0,n))# shape: (#center_pts, n) or empty
-    nose_y = np.vstack(nose_y) if len(nose_y) else np.empty((0,n))# shape: (#center_pts, n) or empty
-    cfm = np.full(n, np.nan, float)                               # preallocate metric
+    # Collect x and y arrays for the center-face landmarks (one row per landmark, columns = frames)
+    nose_x = [col(i, "x").values for i in CFG.CENTER_FACE]        
+    nose_y = [col(i, "y").values for i in CFG.CENTER_FACE]        
+
+    # Stack into 2D arrays (shape: #points x #frames). If empty, make empty arrays.
+    nose_x = np.vstack(nose_x) if len(nose_x) else np.empty((0, n))
+    nose_y = np.vstack(nose_y) if len(nose_y) else np.empty((0, n))
+
+    # Preallocate outputs
+    cfm = np.full(n, np.nan, float)        # overall RMS magnitude
+    cfm_x = np.full(n, np.nan, float)      # RMS spread in X direction only
+    cfm_y = np.full(n, np.nan, float)      # RMS spread in Y direction only
+
     if nose_x.size and nose_y.size:
-        mean_x = np.nanmean(nose_x, axis=1, keepdims=True)        # per-point mean across frames (column vector)
+        # Compute per-point means across frames (shape: #points x 1)
+        mean_x = np.nanmean(nose_x, axis=1, keepdims=True)
         mean_y = np.nanmean(nose_y, axis=1, keepdims=True)
-        dx = nose_x - mean_x                                      # deviation from each point’s mean (x)
-        dy = nose_y - mean_y                                      # deviation from each point’s mean (y)
-        dists = np.sqrt(dx**2 + dy**2)                            # per-point Euclidean deviation per frame
-        cfm = np.sqrt(np.nanmean(dists**2, axis=0))               # RMS across points → 1D series over frames
+
+        # Deviations from each point’s own mean (so we’re measuring *spread*, not absolute position)
+        dx = nose_x - mean_x   # x deviations, same shape (#points x #frames)
+        dy = nose_y - mean_y   # y deviations
+
+        # Euclidean distance per point, per frame
+        dists = np.sqrt(dx**2 + dy**2)
+
+        # Root-mean-square across points → gives 1D series over frames
+        cfm = np.sqrt(np.nanmean(dists**2, axis=0))   # total magnitude spread
+        cfm_x = np.sqrt(np.nanmean(dx**2, axis=0))    # horizontal spread only
+        cfm_y = np.sqrt(np.nanmean(dy**2, axis=0))    # vertical spread only
 
     # Return all per-frame features (arrays length n)
     return {
@@ -306,7 +323,9 @@ def original_features_for_file(df_norm: pd.DataFrame) -> Dict[str, np.ndarray]:
         "pupil_dx": pupil_dx,                 # averaged horizontal pupil offset (L/R)
         "pupil_dy": pupil_dy,                 # averaged vertical pupil offset (L/R)
         "pupil_metric": pupil,                # averaged magnitude of pupil offset (L/R)
-        "center_face_magnitude": cfm          # central-face dispersion (stability proxy)
+        "center_face_magnitude": cfm,          # central-face dispersion (stability proxy)
+        "center_face_x": cfm_x,
+        "center_face_y": cfm_y
     }
 
 # --------- Linear-from-perframe helper --------------------------------------

@@ -125,9 +125,16 @@ def confidence_mask(df_reduced: pd.DataFrame, conf_prefix: str, indices: List[in
 # ---------- Small IO helpers -------------------------------------------------
 def write_per_frame_metrics(out_root: Path, source: str, participant: str, condition: str,
                             perframe: Dict[str, np.ndarray], interocular: np.ndarray, n_frames: int) -> None:
+    """
+    Write per-frame metrics for a single trial AND append that trial to a combined CSV for the source.
+
+    - Individual trial CSV (unchanged): <out_root>/per_frame/<source>/<participant>_<condition>_perframe.csv
+    - Combined CSV (new):             <out_root>/per_frame/<source>/all_perframe.csv
+    """
     out_dir = out_root / "per_frame" / source
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f"{participant}_{condition}_perframe.csv"
+
+    # Build per-trial DataFrame (same columns as before)
     df_pf = pd.DataFrame({
         "participant": participant,
         "condition": condition,
@@ -136,7 +143,43 @@ def write_per_frame_metrics(out_root: Path, source: str, participant: str, condi
     })
     for k, arr in perframe.items():
         df_pf[k] = arr
+
+    # --- 1) write individual trial CSV (keeps previous behavior) ---
+    out_path = out_dir / f"{participant}_{condition}_perframe.csv"
     df_pf.to_csv(out_path, index=False)
+
+    # --- 2) append (or create) combined CSV for this source ---
+    combined_path = out_dir / "all_perframe.csv"
+
+    # If combined doesn't exist, write header + rows
+    if not combined_path.exists():
+        df_pf.to_csv(combined_path, index=False)
+        return
+
+    # Combined exists -> check headers
+    existing_cols = list(pd.read_csv(combined_path, nrows=0).columns)
+
+    # If df_pf has any new columns not in existing, we must rewrite the combined file
+    new_cols = [c for c in df_pf.columns if c not in existing_cols]
+
+    if not new_cols:
+        # Align df_pf to existing column order (add missing existing cols as NaN if needed)
+        for c in existing_cols:
+            if c not in df_pf.columns:
+                df_pf[c] = np.nan
+        df_pf = df_pf[existing_cols]  # ensure same order
+        df_pf.to_csv(combined_path, mode="a", header=False, index=False)
+    else:
+        # There are new columns: read existing, add new cols (NaN), concat, and overwrite combined file
+        df_existing = pd.read_csv(combined_path)
+        for c in new_cols:
+            df_existing[c] = np.nan
+        # Ensure consistent column order: existing columns first (now including new ones), then any remaining
+        final_cols = list(df_existing.columns)
+        # Append the new trial rows with columns aligned
+        df_pf = df_pf.reindex(columns=final_cols, fill_value=np.nan)
+        df_combined = pd.concat([df_existing, df_pf], ignore_index=True)
+        df_combined.to_csv(combined_path, index=False)
 
 def save_json_summary(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)

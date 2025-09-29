@@ -6,7 +6,7 @@ import pandas as pd
 from pathlib import Path
 
 from .config import CFG, SCALE_BY_INTEROCULAR
-from .io_utils import detect_conf_prefix_case_insensitive, relevant_indices, find_real_colname
+from .preprocessing_utils import detect_conf_prefix_case_insensitive, relevant_indices, find_real_colname
 from .normalize_utils import interocular_series
 from .geometry_utils import procrustes_frame_to_template, angle_between_points
 from .window_utils import windows_indices, is_distance_like_metric, linear_metrics
@@ -384,7 +384,13 @@ def compute_linear_from_perframe_dir(per_frame_dir: Path,
             arr = df[k].to_numpy(float)
             if scale_by_interocular and is_distance_like_metric(k) and np.isfinite(io).any():
                 # Normalize distance-like metrics by interocular distance
-                scaled[k] = arr / io
+                # Protect against division by zero or very small values
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    scaled_arr = arr / io
+                    # Replace inf/nan from division with original unscaled values
+                    bad_mask = ~np.isfinite(scaled_arr) | (io < 1e-6)
+                    scaled_arr[bad_mask] = arr[bad_mask]
+                    scaled[k] = scaled_arr
             else:
                 scaled[k] = arr
 

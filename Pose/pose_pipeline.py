@@ -40,6 +40,7 @@ Assumptions:
 from __future__ import annotations  # enable postponed evaluation of type annotations (Python 3.7+ behavior)
 from dataclasses import asdict  # import asdict to serialize dataclass instances to dicts
 from pathlib import Path  # Path objects for filesystem paths
+from typing import List, Dict  # type hints for function signatures
 import json  # JSON read/write for summary artifacts
 import textwrap  # pretty-printing multi-line flag dumps
 import sys  # access to sys.exit and argv
@@ -64,11 +65,17 @@ from utils import (
     OVERWRITE, OVERWRITE_TEMPLATES, SCIPY_AVAILABLE  # overwrite behavior and SciPy availability
 )
 
-# Import IO and utility primitives for pipeline steps
+# Import IO utilities for file operations
 from utils.io_utils import (
-    ensure_dirs, load_raw_files, parse_participant_condition,  # directory setup, raw file listing, name parsing
-    detect_conf_prefix_case_insensitive, relevant_indices, filter_df_to_relevant,  # column detection and selection
-    confidence_mask, write_per_frame_metrics, save_json_summary  # masking, per-frame writer, summary JSON helper
+    ensure_dirs, load_raw_files, write_per_frame_metrics, save_json_summary,  # directory setup, file I/O operations
+    get_output_filename, load_participant_info_file  # filename transformation, participant info
+)
+
+# Import preprocessing utilities for data manipulation
+from utils.preprocessing_utils import (
+    parse_participant_trial, detect_conf_prefix_case_insensitive,  # filename parsing, column detection
+    relevant_indices, filter_df_to_relevant, confidence_mask,  # landmark selection, filtering, masking
+    load_participant_info, create_condition_mapping, get_condition_for_file  # condition mapping
 )
 
 # Signal processing primitives (interp + filtering)
@@ -80,6 +87,45 @@ from utils.features_utils import (
     procrustes_features_for_file, original_features_for_file,
     compute_linear_from_perframe_dir
 )
+
+
+def check_steps_1_5_complete(files: List[Path], condition_map: Dict[str, Dict[int, str]]) -> bool:
+    """Check if all output files from steps 1-5 already exist with condition-based names.
+
+    Returns True if all normalized files exist (indicating steps 1-5 are complete),
+    False if any are missing (indicating steps 1-5 need to be run).
+
+    Args:
+        files: List of input pose CSV files
+        condition_map: Mapping from participant/trial to condition
+
+    Returns:
+        True if all steps 1-5 outputs exist, False otherwise
+    """
+    if not SAVE_NORM:
+        # If we're not saving normalized files, we can't check completion
+        return False
+
+    norm_dir = Path(CFG.OUT_BASE) / "norm_screen"
+    if not norm_dir.exists():
+        return False
+
+    # Check if all normalized condition-based files exist
+    for fp in files:
+        try:
+            pid, trial_num = parse_participant_trial(fp.name)
+            cond = get_condition_for_file(fp.name, condition_map)
+            out_name = get_output_filename(fp.name, pid, cond, "_norm")
+            out_path = norm_dir / out_name
+
+            if not out_path.exists():
+                return False  # Missing file means steps 1-5 incomplete
+
+        except (ValueError, KeyError):
+            # If we can't parse the filename or find condition, assume incomplete
+            return False
+
+    return True  # All files exist
 # Windowing helpers (index generation, window summaries, and linear metrics)
 from utils.window_utils import windows_indices, window_features, is_distance_like_metric, linear_metrics
 
@@ -179,12 +225,54 @@ def run_pipeline():  # main entry point that orchestrates all steps
         return  # linear-only path ends here
 
     # ---------------- Full mode (Steps 1–7) ----------------------------------
-    files = load_raw_files()  # list raw CSV paths from configured RAW_DIR
-    perfile_data = {}  # cache intermediate DataFrames keyed by filename
-    perfile_meta = {}  # store per-file metadata (participant, condition, conf prefix)
-    perfile_mask_stats = {}  # store masking statistics per file
+    # Load participant info and create condition mapping
+    try:
+        participant_info_path = load_participant_info_file()
+        participant_info = load_participant_info(str(participant_info_path))
+        condition_map = create_condition_mapping(participant_info)
+        print(f"Loaded condition mapping for {len(condition_map)} participants")
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        print("Please ensure participant_info.csv is in the RAW_DIR")
+        return
 
-    print("\n=== Steps 1–3: Load → Filter → Mask ===")  # section header for logs
+    files = load_raw_files()  # list raw CSV paths from configured RAW_DIR
+
+    # Check if steps 1-5 are already complete (all condition-based normalized files exist)
+    if not OVERWRITE and check_steps_1_5_complete(files, condition_map):
+        print(f"✓ Steps 1-5 already complete (found all {len(files)} normalized condition-based files)")
+        print("  Loading existing normalized data for steps 6-7...")
+
+        # Load existing normalized data for steps 6-7
+        perfile_data = {}  # cache intermediate DataFrames keyed by filename
+        perfile_meta = {}  # store per-file metadata (participant, condition, conf prefix)
+        perfile_mask_stats = {}  # store masking statistics per file
+
+        for fp in files:
+            pid, trial_num = parse_participant_trial(fp.name)
+            cond = get_condition_for_file(fp.name, condition_map)
+            out_name = get_output_filename(fp.name, pid, cond, "_norm")
+            norm_path = Path(CFG.OUT_BASE) / "norm_screen" / out_name
+
+            # Load the normalized data
+            df_norm = pd.read_csv(norm_path)
+            perfile_data[fp.name] = {"norm": df_norm}
+            perfile_meta[fp.name] = {"participant": pid, "condition": cond}
+
+        print(f"  Loaded {len(perfile_data)} normalized files, proceeding to steps 6-7...")
+
+    else:
+        # Need to run steps 1-5
+        if OVERWRITE:
+            print("OVERWRITE=True: Running steps 1-5 regardless of existing files")
+        else:
+            print("Steps 1-5 needed: Missing some condition-based normalized files")
+
+        perfile_data = {}  # cache intermediate DataFrames keyed by filename
+        perfile_meta = {}  # store per-file metadata (participant, condition, conf prefix)
+        perfile_mask_stats = {}  # store masking statistics per file
+
+        print("\n=== Steps 1–3: Load → Filter → Mask ===")  # section header for logs
     for fp in tqdm(files, desc="Load/Filter/Mask", unit="file"):  # iterate with progress bar
         df_raw = pd.read_csv(fp)  # read CSV into DataFrame
         conf_prefix = detect_conf_prefix_case_insensitive(list(df_raw.columns))  # detect confidence prefix ('prob','c',...)
@@ -193,7 +281,11 @@ def run_pipeline():  # main entry point that orchestrates all steps
         if RUN_FILTER:  # if filtering step enabled
             df_reduced = filter_df_to_relevant(df_raw, conf_prefix, indices)  # keep only relevant x/y/conf triplets
             if SAVE_REDUCED:  # optionally persist reduced CSV for inspection
-                out = Path(CFG.OUT_BASE) / "reduced" / (fp.stem + "_reduced.csv")  # target path
+                # Use condition-based filename
+                pid, trial_num = parse_participant_trial(fp.name)
+                cond = get_condition_for_file(fp.name, condition_map)
+                out_name = get_output_filename(fp.name, pid, cond, "_reduced")
+                out = Path(CFG.OUT_BASE) / "reduced" / out_name  # target path
                 if OVERWRITE or not out.exists():  # respect overwrite flag
                     df_reduced.to_csv(out, index=False)  # write CSV
         else:  # filtering disabled → pipeline cannot proceed safely
@@ -204,7 +296,9 @@ def run_pipeline():  # main entry point that orchestrates all steps
             df_masked, stats = confidence_mask(df_reduced, conf_prefix, indices, CFG.CONF_THRESH)  # mask low-confidence samples
             perfile_mask_stats[fp.name] = stats["overall"]  # record overall stats for summary
             if SAVE_MASKED:  # optionally save masked CSV
-                out = Path(CFG.OUT_BASE) / "masked" / (fp.stem + "_masked.csv")  # target path
+                # Use condition-based filename
+                out_name = get_output_filename(fp.name, pid, cond, "_masked")
+                out = Path(CFG.OUT_BASE) / "masked" / out_name  # target path
                 if OVERWRITE or not out.exists():  # honor overwrite policy
                     df_masked.to_csv(out, index=False)  # write CSV
         else:  # masking disabled → downstream steps expect clean inputs
@@ -212,7 +306,15 @@ def run_pipeline():  # main entry point that orchestrates all steps
             return  # abort
 
         perfile_data[fp.name] = {"reduced": df_reduced, "masked": df_masked}  # stash intermediates
-        pid, cond = parse_participant_condition(fp.name)  # parse participant and condition from filename
+
+        # Parse filename to get participant and condition
+        try:
+            pid, trial_num = parse_participant_trial(fp.name)  # parse participant ID and trial number
+            cond = get_condition_for_file(fp.name, condition_map)  # map trial to condition
+        except (ValueError, KeyError) as e:
+            print(f"Warning: Skipping file {fp.name}: {e}")
+            continue
+
         perfile_meta[fp.name] = {"participant": pid, "condition": cond, "conf_prefix": conf_prefix}  # store meta
 
     print("\n=== Step 4: Interpolate + Filter ===")  # step header
@@ -229,7 +331,11 @@ def run_pipeline():  # main entry point that orchestrates all steps
                     dfm[col] = interpolate_run_limited(dfm[col], CFG.MAX_INTERP_RUN)  # interpolate short NaN runs only
                     dfm[col] = butterworth_segment_filter(dfm[col], CFG.FILTER_ORDER, CFG.CUTOFF_HZ, CFG.FPS)  # low-pass filter per contiguous non-NaN segment
             if SAVE_INTERP_FILTERED:  # optionally persist cleaned coordinates
-                out = Path(CFG.OUT_BASE) / "interp_filtered" / (fp.stem + "_interp_filt.csv")  # output path
+                # Use condition-based filename
+                pid = perfile_meta[name]["participant"]
+                cond = perfile_meta[name]["condition"]
+                out_name = get_output_filename(name, pid, cond, "_interp_filt")
+                out = Path(CFG.OUT_BASE) / "interp_filtered" / out_name  # output path
                 if OVERWRITE or not out.exists():  # respect overwrite policy
                     dfm.to_csv(out, index=False)  # write CSV
             perfile_data[name]["interp_filt"] = dfm  # store result for subsequent steps
@@ -244,7 +350,11 @@ def run_pipeline():  # main entry point that orchestrates all steps
             dfc = perfile_data[name]["interp_filt"]  # take cleaned coords
             df_norm = normalize_to_screen(dfc, CFG.IMG_WIDTH, CFG.IMG_HEIGHT)  # divide x by width, y by height
             if SAVE_NORM:  # optionally save normalized CSV
-                out = Path(CFG.OUT_BASE) / "norm_screen" / (fp.stem + "_norm.csv")  # path
+                # Use condition-based filename
+                pid = perfile_meta[name]["participant"]
+                cond = perfile_meta[name]["condition"]
+                out_name = get_output_filename(name, pid, cond, "_norm")
+                out = Path(CFG.OUT_BASE) / "norm_screen" / out_name  # path
                 if OVERWRITE or not out.exists():  # overwrite check
                     df_norm.to_csv(out, index=False)  # write CSV
             perfile_data[name]["norm"] = df_norm  # store normalized data
@@ -428,7 +538,8 @@ if __name__ == "__main__":  # allow script to run as a module or standalone
     print("POSE PIPELINE — standalone mode")  # banner
     print("Config:")  # header
     for k, v in asdict(CFG).items():  # iterate config fields
-        print(f"  {k}: {v}")  # print key/value pairs
+        if not k.startswith('_'):  # skip private fields
+            print(f"  {k}: {v}")  # print key/value pairs
     print("\nFlags:")  # header for flags
     print(textwrap.indent(  # indent the next block for readability
         "\n".join([f"{k}: {globals()[k]}" for k in [  # build lines of flag=value using global variables

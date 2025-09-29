@@ -26,6 +26,15 @@ def find_nan_runs(mask: np.ndarray) -> List[Tuple[int, int]]:
     return runs
 
 def interpolate_run_limited(series: pd.Series, max_run: int) -> pd.Series:
+    """Interpolate NaN values only for runs shorter than max_run.
+
+    Args:
+        series: Input series with potential NaN values
+        max_run: Maximum consecutive NaN values to interpolate
+
+    Returns:
+        Series with short NaN runs interpolated, long runs kept as NaN
+    """
     x = series.astype(float).copy()
     nan_mask = x.isna().values
     runs = find_nan_runs(nan_mask)
@@ -37,7 +46,8 @@ def interpolate_run_limited(series: pd.Series, max_run: int) -> pd.Series:
     if allow.any():
         disallowed = nan_mask & (~allow)
         temp = y_interp.copy()
-        temp[~(~disallowed)] = np.nan  # ensure disallowed NaNs remain NaN
+        # Simplified: directly set disallowed positions to NaN
+        temp[disallowed] = np.nan  # ensure disallowed NaNs remain NaN
         temp = temp.interpolate(method="linear", limit=None, limit_direction="both")
         y_interp[allow] = temp[allow]
         y_interp[~allow & nan_mask] = np.nan

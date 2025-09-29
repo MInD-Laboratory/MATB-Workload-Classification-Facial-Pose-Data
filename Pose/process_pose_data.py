@@ -610,7 +610,7 @@ def step_7_extract_features(normalized_data: Dict[str, pd.DataFrame],
         # C) Original features (no Procrustes)
         if RUN_FEATURES_ORIGINAL:
             try:
-                feats = original_features_for_file(df_norm, rel_idxs)
+                feats = original_features_for_file(df_norm)
                 io = interocular_series(df_norm, metadata[filename].get("conf_prefix")).values
                 n_frames = len(io)
 
@@ -666,7 +666,9 @@ def step_8_compute_linear_metrics() -> None:
         print("RUN_LINEAR=False. Skipping linear metrics computation.")
         return
 
-    base_dir = Path(CFG.OUT_BASE) / "per_frame"
+    feat_dir = Path(CFG.OUT_BASE) / "features"
+    lm_dir = Path(CFG.OUT_BASE) / "linear_metrics"
+    lm_dir.mkdir(parents=True, exist_ok=True)
 
     # Process each feature type
     feature_types = []
@@ -681,12 +683,16 @@ def step_8_compute_linear_metrics() -> None:
         print(f"\n8) Computing linear metrics for {feature_type}...")
 
         try:
-            per_frame_dir = base_dir / feature_type
-            if per_frame_dir.exists():
-                compute_linear_from_perframe_dir(per_frame_dir, scale_by_interocular=SCALE_BY_INTEROCULAR)
-                print(f"Linear metrics computed for {feature_type}")
+            per_frame_dir = feat_dir / "per_frame" / feature_type
+            if per_frame_dir.exists() and any(per_frame_dir.glob("*.csv")):
+                out_path = lm_dir / f"{feature_type}_linear.csv"
+                compute_linear_from_perframe_dir(
+                    per_frame_dir, out_path, CFG.FPS, CFG.WINDOW_SECONDS,
+                    CFG.WINDOW_OVERLAP, scale_by_interocular=SCALE_BY_INTEROCULAR
+                )
+                print(f"Linear metrics computed for {feature_type}: {out_path}")
             else:
-                print(f"Per-frame directory not found: {per_frame_dir}")
+                print(f"Per-frame directory not found or empty: {per_frame_dir}")
 
         except Exception as e:
             print(f"Error computing linear metrics for {feature_type}: {e}")
@@ -807,9 +813,9 @@ def run_pose_processing_pipeline() -> None:
     save_json_summary(summary_path, summary)
 
     print("\n" + "="*80)
-    print("🎉 POSE PROCESSING PIPELINE COMPLETE!")
+    print("POSE PROCESSING PIPELINE COMPLETE!")
     print("="*80)
-    print(f"📄 Processing summary saved: {summary_path}")
+    print(f"Processing summary saved: {summary_path}")
 
 
 # ================================================================================================

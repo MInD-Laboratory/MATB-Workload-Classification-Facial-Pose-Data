@@ -34,25 +34,25 @@ class Config:
 CFG = Config()
 
 # ---------------------- FLAGS -------------------------------------------------
-RUN_FILTER          = True
-RUN_MASK            = True
-RUN_INTERP_FILTER   = True
-RUN_NORM            = True
-RUN_TEMPLATES       = True
-RUN_FEATURES_PROCRUSTES_GLOBAL      = True
-RUN_FEATURES_PROCRUSTES_PARTICIPANT = True
+RUN_FILTER          = False
+RUN_MASK            = False
+RUN_INTERP_FILTER   = False
+RUN_NORM            = False
+RUN_TEMPLATES       = False
+RUN_FEATURES_PROCRUSTES_GLOBAL      = False
+RUN_FEATURES_PROCRUSTES_PARTICIPANT = False
 RUN_FEATURES_ORIGINAL               = True
 RUN_LINEAR          = True
 SCALE_BY_INTEROCULAR = True
 
-SAVE_REDUCED            = True
-SAVE_MASKED             = True
-SAVE_INTERP_FILTERED    = True
-SAVE_NORM               = True
+SAVE_REDUCED            = False
+SAVE_MASKED             = False
+SAVE_INTERP_FILTERED    = False
+SAVE_NORM               = False
 
-SAVE_PER_FRAME_PROCRUSTES_GLOBAL      = True
-SAVE_PER_FRAME_PROCRUSTES_PARTICIPANT = True
+SAVE_PER_FRAME_PROCRUSTES_GLOBAL      = False
+SAVE_PER_FRAME_PROCRUSTES_PARTICIPANT = False
 SAVE_PER_FRAME_ORIGINAL               = True
 
-OVERWRITE               = True
+OVERWRITE               = False
 OVERWRITE_TEMPLATES     = False

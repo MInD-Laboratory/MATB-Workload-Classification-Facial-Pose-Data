@@ -146,7 +146,7 @@ def fixation_detection(x, y, t, maxdist=1.0, mindur=0.20):
         Efix.append([Sfix[-1][0], t[-1], t[-1]-Sfix[-1][0], x[anchor], y[anchor]])
     return Sfix, Efix
 
-def saccade_detection(x, y, t, minlen=5, vel_thr=5, acc_thr=50):
+def saccade_detection(x, y, t, minlen=15, vel_thr=5, acc_thr=50):
     """
     Detect saccades based on velocity and acceleration thresholds.
     x, y, t: gaze coordinates and time arrays
@@ -202,8 +202,8 @@ def extract_eye_metrics(df, sample_rate=1000, win_sec=60, overlap_fr=0.5, missin
         pl = resample_poly(pl, up=1, down=ds_factor)
         ts = resample_poly(ts, up=1, down=ds_factor)
         # Adjust FPS for windowing
-        fps = int(fps / ds_factor)
-        win_samples = win_sec * fps
+        FPS = int(FPS / ds_factor)
+        win_samples = win_sec * FPS
         step = int(win_samples * (1 - overlap_fr))
 
     # valid‐eye logic

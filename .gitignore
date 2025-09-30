@@ -357,3 +357,8 @@ pose/data/pose_data/3249_03_pose.csv
 pose/data/pose_data/3250_01_pose.csv
 pose/data/pose_data/3250_02_pose.csv
 pose/data/pose_data/3250_03_pose.csv
+eye_tracking/__pycache__
+rf_training_data
+__pycache__
+.ipynb_checkpoints
+.venv

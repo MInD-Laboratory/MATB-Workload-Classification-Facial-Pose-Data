@@ -7,7 +7,7 @@ from matplotlib.widgets import Slider, Button
 from matplotlib.patches import Patch
 from typing import List, Optional, Tuple
 
-from .io_utils import relevant_indices, detect_conf_prefix_case_insensitive, lm_triplet_colnames  # if you exported lm_triplet_colnames
+from .preprocessing_utils import relevant_indices, detect_conf_prefix_case_insensitive, lm_triplet_colnames
 from .features_utils import procrustes_frame_to_template  # if separated; else import the function wherever it lives
 from .nb_utils import find_col
 

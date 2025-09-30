@@ -46,7 +46,7 @@ class Config:
     # Directory paths - can be overridden by environment variables
     # Use paths relative to the Pose directory (where this config file is located)
     _BASE_DIR: str = str(Path(__file__).parent.parent)  # Pose directory
-    RAW_DIR: str = os.getenv("POSE_RAW_DIR", str(Path(_BASE_DIR) / "data" / "raw_data"))
+    RAW_DIR: str = os.getenv("POSE_RAW_DIR", str(Path(_BASE_DIR) / "data" / "pose_data"))
     OUT_BASE: str = os.getenv("POSE_OUT_BASE", str(Path(_BASE_DIR) / "data" / "processed"))
 
     # Participant info file - can be overridden by environment variable

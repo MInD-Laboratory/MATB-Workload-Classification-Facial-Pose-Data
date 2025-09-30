@@ -67,9 +67,9 @@ def create_condition_mapping(participant_info: pd.DataFrame) -> Dict[str, Dict[i
         # Create trial mapping for this participant
         trial_map = {}
 
-        # Parse each session (Session1, Session2, Session3)
+        # Parse each session (Session01, Session02, Session03)
         for session_num in [1, 2, 3]:
-            session_col = f'Session{session_num}'
+            session_col = f'session0{session_num}'
             if session_col in row and not pd.isna(row[session_col]) and row[session_col] != '-':
                 session_value = str(row[session_col])
 

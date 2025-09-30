@@ -49,7 +49,7 @@ def run_rpy2_lmer(df, dv, feature_label):
     base = importr("base")
     lmerTest = importr("lmerTest")
     emmeans = importr("emmeans")
-    formula = f'{dv} ~ condition + session_order_numeric + window_index + (window_index|participant_id)'
+    formula = f'{dv} ~ condition + session_order_numeric + window_index + (1|participant_id)'
     robjects.r(f"library(lmerTest)")
     robjects.r(f"library(emmeans)")
     robjects.r(f"model <- lmer({formula}, data=dat)")

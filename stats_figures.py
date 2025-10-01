@@ -42,7 +42,6 @@ def run_rpy2_lmer(df, dv, feature_label):
     cis = {}
     dat = df[["participant_id", "condition", "session_order_numeric", "window_index", dv]].dropna().copy()
     dat["condition"] = pd.Categorical(dat["condition"], categories=["L", "M", "H"], ordered=True)
-    print(df[['participant_id', 'condition', 'session_order_numeric', 'window_index', 'blink_count']].head())
     with localconverter(robjects.default_converter + pandas2ri.converter):
         r_dat = robjects.conversion.py2rpy(dat)
     robjects.globalenv["dat"] = r_dat

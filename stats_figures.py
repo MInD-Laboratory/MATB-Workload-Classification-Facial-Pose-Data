@@ -40,15 +40,23 @@ def run_rpy2_lmer(df, dv, feature_label):
     pairwise_p = {}
     means = {}
     cis = {}
-    dat = df[["participant_id", "condition", "session_order_numeric", "window_index", dv]].dropna().copy()
+    # --- Handle participant column robustly ---
+    participant_col = "participant_id" if "participant_id" in df.columns else "participant"
+    dat = df[[participant_col, "condition", "session_order_numeric", "window_index", dv]].dropna().copy()
+    dat = dat.rename(columns={participant_col: "participant_id"})
+    # --- Factorise condition ---
     dat["condition"] = pd.Categorical(dat["condition"], categories=["L", "M", "H"], ordered=True)
+    # --- Rename dv to a safe column name for R ---
+    dat = dat.rename(columns={dv: "dv"})
+    # --- Push to R and ensure participant_id is a factor ---
     with localconverter(robjects.default_converter + pandas2ri.converter):
         r_dat = robjects.conversion.py2rpy(dat)
     robjects.globalenv["dat"] = r_dat
-    base = importr("base")
-    lmerTest = importr("lmerTest")
-    emmeans = importr("emmeans")
-    formula = f'{dv} ~ condition + session_order_numeric + window_index + (1|participant_id)'
+    robjects.r("dat$participant_id <- factor(dat$participant_id)")
+    # --- Load R packages and set up formula ---
+    robjects.r("library(lmerTest)")
+    robjects.r("library(emmeans)")
+    formula = 'dv ~ condition + session_order_numeric + window_index + (1|participant_id)'
     robjects.r(f"library(lmerTest)")
     robjects.r(f"library(emmeans)")
     robjects.r(f"model <- lmer({formula}, data=dat)")

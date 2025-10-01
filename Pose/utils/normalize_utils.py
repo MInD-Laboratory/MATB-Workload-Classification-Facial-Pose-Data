@@ -58,26 +58,12 @@ def normalize_to_screen(df: pd.DataFrame, width: int, height: int) -> pd.DataFra
     return out
 
 def interocular_series(df: pd.DataFrame, conf_prefix: Optional[str] = None) -> pd.Series:
-    """Calculate inter-ocular distance for each frame.
+    """
+    Calculate inter-ocular distance for each frame.
 
-    Computes the Euclidean distance between left and right eye corners
-    (landmarks 37 and 46 in MediaPipe face mesh). This distance is commonly
-    used for scale normalization as it's relatively stable across expressions.
-
-    Args:
-        df: DataFrame containing landmark coordinates
-        conf_prefix: Optional prefix for confidence columns. If provided, will mask
-                    distances where either eye corner has low confidence
-
-    Returns:
-        Series containing inter-ocular distance for each frame.
-        Returns NaN values if required landmarks are missing or have low confidence.
-
-    Note:
-        - Landmarks 37 and 46 correspond to outer eye corners in MediaPipe
-        - Uses find_real_colname to handle different column naming conventions
-        - Converts to numeric to handle any string values
-        - If conf_prefix is provided, masks values where confidence < threshold
+    Uses **landmarks 37 (right eye)** and **46 (left eye)** in 1-based
+    OpenPose indexing. Inter-ocular distance is computed as
+    the Euclidean distance between these two points.
     """
     # Get list of all columns for column name searching
     cols = list(df.columns)

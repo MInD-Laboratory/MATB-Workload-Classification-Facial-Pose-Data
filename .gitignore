@@ -362,3 +362,4 @@ rf_training_data
 __pycache__
 .ipynb_checkpoints
 .venv
+pose_data_copy

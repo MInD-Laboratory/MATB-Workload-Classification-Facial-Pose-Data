@@ -372,7 +372,10 @@ def compute_linear_from_perframe_dir(per_frame_dir: Path,
     """
     rows = []                       # Collect results for all windows across all files
     drops_agg: Dict[str, int] = {}  # Count of dropped windows per metric
-    files = sorted(per_frame_dir.glob("*.csv"))  # All per-frame CSV files in directory
+    files = [
+    f for f in sorted(per_frame_dir.glob("*.csv"))
+    if not f.name.startswith("all_")
+    ]
 
     # --- Process each per-frame CSV file ---
     for pf in files:

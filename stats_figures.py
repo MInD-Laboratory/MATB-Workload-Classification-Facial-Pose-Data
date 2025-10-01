@@ -80,6 +80,8 @@ def run_rpy2_lmer(df, dv, feature_label):
     emm_df = robjects.r('as.data.frame(emmeans(model, "condition"))')
     with localconverter(robjects.default_converter + pandas2ri.converter):
         emm_pd = robjects.conversion.rpy2py(emm_df)
+    lower_col = "lower.CL" if "lower.CL" in emm_pd.columns else "asymp.LCL"
+    upper_col = "upper.CL" if "upper.CL" in emm_pd.columns else "asymp.UCL"
     cond_map_r = {'1': 'L', '1.0': 'L', 'L': 'L',
                 '2': 'M', '2.0': 'M', 'M': 'M',
                 '3': 'H', '3.0': 'H', 'H': 'H'}
@@ -87,7 +89,7 @@ def run_rpy2_lmer(df, dv, feature_label):
         cond_raw = str(row['condition'])
         key = cond_map_r.get(cond_raw, cond_raw)
         means[key] = row['emmean']
-        cis[key] = (row['lower.CL'], row['upper.CL'])
+        cis[key] = (row[lower_col], row[upper_col])
     return pairwise_p, means, cis
 
 def barplot_ax(ax, means, sems, pvals,

@@ -684,7 +684,9 @@ def step_8_compute_linear_metrics() -> None:
 
         try:
             per_frame_dir = feat_dir / "per_frame" / feature_type
-            if per_frame_dir.exists() and any(per_frame_dir.glob("*.csv")):
+            csv_files = [f for f in per_frame_dir.glob("*.csv") if not f.name.startswith("all_")]
+
+            if per_frame_dir.exists() and csv_files:
                 out_path = lm_dir / f"{feature_type}_linear.csv"
                 compute_linear_from_perframe_dir(
                     per_frame_dir, out_path, CFG.FPS, CFG.WINDOW_SECONDS,
@@ -692,7 +694,7 @@ def step_8_compute_linear_metrics() -> None:
                 )
                 print(f"Linear metrics computed for {feature_type}: {out_path}")
             else:
-                print(f"Per-frame directory not found or empty: {per_frame_dir}")
+                print(f"Per-frame directory not found or empty (after filtering): {per_frame_dir}")
 
         except Exception as e:
             print(f"Error computing linear metrics for {feature_type}: {e}")

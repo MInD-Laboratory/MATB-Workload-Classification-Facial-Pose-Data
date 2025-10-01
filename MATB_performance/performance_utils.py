@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 
 def get_csv_files_with_main(folder_path):
+    """Get all CSV files in the specified folder that contain 'main' in their filename."""
     csv_files = []
     for file_name in os.listdir(folder_path):
         if file_name.endswith('.csv') and 'main' in file_name:
@@ -20,6 +21,7 @@ sysmon_events = {
     'scales-4-failure': 'F6'
 }
 def calculate_sysmon_hits_per_window(df, module, value, window_size=60, overlap=0.5, total_time=480):
+    """Calculate hits, events, and average reaction times per window for the sysmon task."""
     hits_per_window = []
     events_per_window = []
     average_reaction_times = []
@@ -53,12 +55,14 @@ def calculate_sysmon_hits_per_window(df, module, value, window_size=60, overlap=
     return hits_per_window, events_per_window, average_reaction_times
 
 def sysmon_measures(df, window_size=60, overlap=0.5, total_time=480):
+    """Calculate failure rate and average reaction times for the sysmon task."""
     hits_per_window, events_per_window, average_reaction_times = calculate_sysmon_hits_per_window(df, 'sysmon', 'HIT', window_size, overlap, total_time)
     misses_per_window, _, _ = calculate_sysmon_hits_per_window(df, 'sysmon', 'MISS', window_size, overlap, total_time)
     failure_rate = [(miss / event) * 100 if event != 0 else 0 for miss, event in zip(misses_per_window, events_per_window)]
     return failure_rate, average_reaction_times, events_per_window, hits_per_window
 
 def calculate_comms_hits_per_window(df, module, value, window_size=60, overlap=0.5, total_time=480):
+    """Calculate hits, events, own events, and average reaction times per window for the comms task."""
     hits_per_window = []
     events_per_window = []
     own_events_per_window = []
@@ -91,6 +95,7 @@ def calculate_comms_hits_per_window(df, module, value, window_size=60, overlap=0
     return hits_per_window, events_per_window, own_events_per_window, average_reaction_times
 
 def calculate_comms_miss_per_window(df, module, value, window_size=60, overlap=0.5, total_time=480):
+    """Calculate misses, events, and own events per window for the comms task."""
     hits_per_window = []
     events_per_window = []
     own_events_per_window = []
@@ -114,6 +119,7 @@ def calculate_comms_miss_per_window(df, module, value, window_size=60, overlap=0
     return hits_per_window, events_per_window, own_events_per_window
 
 def comms_measures(df, window_size=60, overlap=0.5, total_time=480):
+    """Calculate failure rate and average reaction times for the comms task."""
     misses_per_window, events_per_window, own_events_per_window = calculate_comms_miss_per_window(df, 'communications', 'MISS', window_size, overlap, total_time)
     bad_radio_per_window, _, _ = calculate_comms_miss_per_window(df, 'communications', 'BAD_RADIO', window_size, overlap, total_time)
     miss_bad_per_window = [miss + bad for miss, bad in zip(misses_per_window, bad_radio_per_window)]
@@ -122,6 +128,7 @@ def comms_measures(df, window_size=60, overlap=0.5, total_time=480):
     return failure_rate, events_per_window, own_events_per_window, average_reaction_times
 
 def track_measures(df, window_size=60, overlap=0.5, total_time=480):
+    """Calculate performance percentage per window for the tracking task."""
     performance_per_window = []
     step = int(window_size * (1 - overlap))
     if step <= 0:
@@ -139,6 +146,7 @@ def track_measures(df, window_size=60, overlap=0.5, total_time=480):
     return performance_per_window
 
 def resman_measures(df, window_size=60, overlap=0.5, total_time=480):
+    """Calculate performance percentage per window for the resource management task."""
     performance_per_window = []
     step = int(window_size * (1 - overlap))
     if step <= 0:

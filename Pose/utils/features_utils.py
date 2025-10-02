@@ -407,6 +407,23 @@ def compute_linear_from_perframe_dir(per_frame_dir: Path,
             else:
                 scaled[k] = arr
 
+        # --- Min-max scale every metric to [0, 1] per file ---
+        scaled_unit = {}
+        for k, arr in scaled.items():
+            arr_unit = arr.astype(float, copy=True)
+            finite = np.isfinite(arr_unit)
+            if finite.any():
+                lo = np.nanmin(arr_unit[finite])
+                hi = np.nanmax(arr_unit[finite])
+                if hi <= lo:
+                    hi = lo + 1e-9
+                arr_unit = (arr_unit - lo) / (hi - lo)
+                arr_unit[~finite] = np.nan
+                arr_unit = np.clip(arr_unit, 0.0, 1.0)
+            else:
+                arr_unit = np.full_like(arr_unit, np.nan, dtype=float)
+            scaled_unit[k] = arr_unit
+
         # --- Compute windowing parameters ---
         win = window_seconds * fps                        # Window size in frames
         hop = int(win * (1.0 - window_overlap))           # Step size (with overlap)
@@ -426,7 +443,7 @@ def compute_linear_from_perframe_dir(per_frame_dir: Path,
             }
 
             # --- Process each metric within the window ---
-            for k, arr in scaled.items():
+            for k, arr in scaled_unit.items():
                 seg = arr[s:e]  # Segment of data for this metric
 
                 if np.any(~np.isfinite(seg)) or len(seg) < 3:

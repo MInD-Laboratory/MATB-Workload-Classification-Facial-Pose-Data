@@ -499,17 +499,12 @@ def step_7_extract_features(normalized_data: Dict[str, pd.DataFrame],
         # A) Procrustes features vs global template
         if CFG.RUN_FEATURES_PROCRUSTES_GLOBAL and global_template is not None:
             try:
-                print("Procrustes global")
                 feats = procrustes_features_for_file(df_norm, global_template, rel_idxs)
-                print("calculated procrustes features")
                 io = interocular_series(df_norm, metadata[filename].get("conf_prefix")).values
                 n_frames = len(io)
-                print(f"Number of frames: {n_frames}")
                 if CFG.SAVE_PER_FRAME_PROCRUSTES_GLOBAL:
                     write_per_frame_metrics(feat_dir, "procrustes_global", pid, trial, feats, io, n_frames)
-                print("calculated per-frame metrics")
                 dfw, drops = window_features(feats, io, CFG.FPS, win, hop)
-                print("calculated windowed features")
                 dfw.insert(0, "participant", pid)
                 dfw.insert(0, "source", "procrustes_global")
                 procrustes_global_rows.append(dfw)
@@ -709,10 +704,10 @@ def run_pose_processing_pipeline() -> None:
     # Steps 6-8: Templates and Features (always run when requested)
 
     # Step 6: Build templates
-    #global_template, participant_templates = step_6_build_templates(normalized_data, perfile_meta)
+    global_template, participant_templates = step_6_build_templates(normalized_data, perfile_meta)
 
     # Step 7: Extract features
-    #step_7_extract_features(normalized_data, perfile_meta, global_template, participant_templates)
+    step_7_extract_features(normalized_data, perfile_meta, global_template, participant_templates)
 
     # Step 8: Compute linear metrics
     step_8_compute_linear_metrics()

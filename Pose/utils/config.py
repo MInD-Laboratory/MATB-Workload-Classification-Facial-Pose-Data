@@ -8,15 +8,6 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 
-# Check SciPy availability for optional filtering operations
-# SciPy is used for Butterworth filtering and signal processing
-try:
-    from scipy.signal import butter, filtfilt  # noqa: F401
-    SCIPY_AVAILABLE = True
-except Exception:
-    # SciPy not available - filtering operations will be skipped
-    SCIPY_AVAILABLE = False
-
 @dataclass
 class Config:
     """Main configuration class containing all processing parameters.
@@ -46,11 +37,11 @@ class Config:
     # Directory paths - can be overridden by environment variables
     # Use paths relative to the Pose directory (where this config file is located)
     _BASE_DIR: str = str(Path(__file__).parent.parent)  # Pose directory
-    RAW_DIR: str = os.getenv("POSE_RAW_DIR", str(Path(_BASE_DIR) / "data" / "pose_data"))
+    RAW_DIR: str = r"D:\Onedrive\Macquarie University\Complexity in Action - Mind and Interaction Dynamics\PNAS-MATB\pose_data"
     OUT_BASE: str = os.getenv("POSE_OUT_BASE", str(Path(_BASE_DIR) / "data" / "processed"))
 
     # Participant info file - can be overridden by environment variable
-    PARTICIPANT_INFO_FILE: str = os.getenv("PARTICIPANT_INFO_FILE", "participant_info.csv")
+    PARTICIPANT_INFO_FILE: str = r"D:\Onedrive\Macquarie University\Complexity in Action - Mind and Interaction Dynamics\PNAS-MATB\participant_info.csv"
 
     # Video/image parameters
     FPS: int = 60  # Sampling rate of video capture
@@ -69,7 +60,7 @@ class Config:
 
     # Facial landmark indices for specific features
     # Based on MediaPipe face mesh topology
-    PROCRUSTES_REF: tuple[int, ...] = (30, 31, 37, 46)  # Stable points for alignment
+    PROCRUSTES_REF: tuple[int, ...] = (28, 31, 37, 46)  # Stable points for alignment
     BLINK_L_TOP: tuple[int, ...] = (38, 39)  # Left eye upper lid
     BLINK_L_BOT: tuple[int, ...] = (41, 42)  # Left eye lower lid
     BLINK_R_TOP: tuple[int, ...] = (44, 45)  # Right eye upper lid
@@ -78,42 +69,42 @@ class Config:
     MOUTH: tuple[int, int] = (63, 67)  # Mouth corners
     CENTER_FACE: tuple[int, ...] = tuple(range(28, 36 + 1))  # Nose bridge region (28-36)
 
+    # ---------------------- PROCESSING FLAGS -------------------------------------
+    # These flags control which processing steps are executed in the pipeline
+
+    # Core processing steps
+    RUN_FILTER: bool = True  # Apply Butterworth low-pass filter to smooth signals
+    RUN_MASK: bool = True  # Mask low-confidence landmarks
+    RUN_INTERP_FILTER: bool = True  # Interpolate and filter masked regions
+    RUN_NORM: bool = True  # Normalize coordinates (centering and scaling)
+    RUN_TEMPLATES: bool = True  # Generate participant-specific templates
+    RUN_LINEAR: bool = True  # Run linear regression analysis
+
+    # Feature extraction for different normalization methods
+    RUN_FEATURES_PROCRUSTES_GLOBAL: bool = True  # Extract features using global Procrustes
+    RUN_FEATURES_PROCRUSTES_PARTICIPANT: bool = True  # Extract features using participant-specific Procrustes
+    RUN_FEATURES_ORIGINAL: bool = True  # Extract features from original coordinates
+
+    # Normalization options
+    SCALE_BY_INTEROCULAR: bool = True  # Scale by inter-ocular distance (eye corner distance)
+
+    # ---------------------- OUTPUT FLAGS ------------------------------------------
+    # Control what intermediate data is saved to disk
+
+    # Save intermediate processing stages
+    SAVE_REDUCED: bool = True  # Save reduced landmark set
+    SAVE_MASKED: bool = True  # Save after confidence masking
+    SAVE_INTERP_FILTERED: bool = True  # Save after interpolation and filtering
+    SAVE_NORM: bool = True  # Save normalized coordinates
+
+    # Save per-frame features for different normalizations
+    SAVE_PER_FRAME_PROCRUSTES_GLOBAL: bool = True  # Save frame-level features (global)
+    SAVE_PER_FRAME_PROCRUSTES_PARTICIPANT: bool = True  # Save frame-level features (participant)
+    SAVE_PER_FRAME_ORIGINAL: bool = True  # Save frame-level features (original)
+
+    # File overwrite behavior
+    OVERWRITE: bool = False   # Overwrite existing processed files
+    OVERWRITE_TEMPLATES: bool = False  # Preserve existing templates (don't regenerate)
+
 # Global configuration instance
 CFG = Config()
-
-# ---------------------- PROCESSING FLAGS -------------------------------------
-# These flags control which processing steps are executed in the pipeline
-
-# Core processing steps
-RUN_FILTER          = True  # Apply Butterworth low-pass filter to smooth signals
-RUN_MASK            = True  # Mask low-confidence landmarks
-RUN_INTERP_FILTER   = True  # Interpolate and filter masked regions
-RUN_NORM            = True  # Normalize coordinates (centering and scaling)
-RUN_TEMPLATES       = True  # Generate participant-specific templates
-RUN_LINEAR          = True  # Run linear regression analysis
-
-# Feature extraction for different normalization methods
-RUN_FEATURES_PROCRUSTES_GLOBAL      = True  # Extract features using global Procrustes
-RUN_FEATURES_PROCRUSTES_PARTICIPANT = True  # Extract features using participant-specific Procrustes
-RUN_FEATURES_ORIGINAL               = True  # Extract features from original coordinates
-
-# Normalization options
-SCALE_BY_INTEROCULAR = True  # Scale by inter-ocular distance (eye corner distance)
-
-# ---------------------- OUTPUT FLAGS ------------------------------------------
-# Control what intermediate data is saved to disk
-
-# Save intermediate processing stages
-SAVE_REDUCED            = True  # Save reduced landmark set
-SAVE_MASKED             = True  # Save after confidence masking
-SAVE_INTERP_FILTERED    = True  # Save after interpolation and filtering
-SAVE_NORM               = True  # Save normalized coordinates
-
-# Save per-frame features for different normalizations
-SAVE_PER_FRAME_PROCRUSTES_GLOBAL      = True  # Save frame-level features (global)
-SAVE_PER_FRAME_PROCRUSTES_PARTICIPANT = True  # Save frame-level features (participant)
-SAVE_PER_FRAME_ORIGINAL               = True  # Save frame-level features (original)
-
-# File overwrite behavior
-OVERWRITE               = True   # Overwrite existing processed files
-OVERWRITE_TEMPLATES     = False  # Preserve existing templates (don't regenerate)

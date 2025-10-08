@@ -109,7 +109,7 @@ def load_participant_info_file() -> Path:
 
 
 # ---------- File writing operations -------------------------------------------
-def write_per_frame_metrics(out_root: Path, source: str, participant: str, condition: str,
+def write_per_frame_metrics(out_root: Path, source: str, participant: str, trial_num: str,
                             perframe: Dict[str, np.ndarray], interocular: np.ndarray, n_frames: int) -> None:
     """Write per-frame metrics for a single trial and update combined CSV.
 
@@ -121,7 +121,6 @@ def write_per_frame_metrics(out_root: Path, source: str, participant: str, condi
         out_root: Root output directory
         source: Source identifier (e.g., 'procrustes_global')
         participant: Participant ID
-        condition: Experimental condition
         perframe: Dictionary of metric_name -> array of per-frame values
         interocular: Array of inter-ocular distances
         n_frames: Number of frames
@@ -132,15 +131,15 @@ def write_per_frame_metrics(out_root: Path, source: str, participant: str, condi
     # Build per-trial DataFrame
     df_pf = pd.DataFrame({
         "participant": participant,
-        "condition": condition,
+        "session_number": trial_num,
         "frame": np.arange(n_frames, dtype=int),
         "interocular": interocular
     })
     for k, arr in perframe.items():
         df_pf[k] = arr
-
+    print(f"Per-frame DataFrame columns: {df_pf.columns.tolist()}")
     # Write individual trial CSV
-    out_path = out_dir / f"{participant}_{condition}_perframe.csv"
+    out_path = out_dir / f"{participant}_{trial_num}_perframe.csv"
     df_pf.to_csv(out_path, index=False)
 
     # Append to (or create) combined CSV for this source

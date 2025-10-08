@@ -1,5 +1,4 @@
 # utils/viz_utils.py
-from __future__ import annotations
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,6 +9,141 @@ from typing import List, Optional, Tuple
 from .preprocessing_utils import relevant_indices, detect_conf_prefix_case_insensitive, lm_triplet_colnames
 from .features_utils import procrustes_frame_to_template  # if separated; else import the function wherever it lives
 from .nb_utils import find_col
+from .config import CFG
+# Visualization functions moved from notebook
+def plot_landmark_scatter(df, title="Facial Landmarks", sample_frame=0):
+    """Plot facial landmarks as a scatter plot."""
+    fig, ax = plt.subplots(figsize=(6, 6))
+    # Extract x and y coordinates for the sample frame
+    x_cols = [c for c in df.columns if c.lower().startswith('x')]
+    y_cols = [c for c in df.columns if c.lower().startswith('y')]
+    if len(df) > sample_frame:
+        x_vals = df[x_cols].iloc[sample_frame].values
+        y_vals = df[y_cols].iloc[sample_frame].values
+        # Invert y-axis for image coordinates
+        ax.scatter(x_vals, y_vals, s=50, c='blue', alpha=0.6)
+        # Mark key landmarks
+        key_indices = [i - 1 for i in CFG.PROCRUSTES_REF]
+        for idx in key_indices:
+            if idx < len(x_vals):
+                ax.scatter(x_vals[idx], y_vals[idx], s=200, marker='o', facecolors='none', edgecolors='red', linewidths=1.5)
+    ax.set_title(title, fontsize=14, fontweight='bold')
+    ax.set_xlabel('X Coordinate')
+    ax.set_ylabel('Y Coordinate')
+    ax.invert_yaxis()  # Invert for image coordinates
+    ax.set_aspect('equal')
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+def plot_confidence_histogram(df, conf_prefix='prob'):
+    """Plot histogram of confidence values."""
+    conf_cols = [c for c in df.columns if c.lower().startswith(conf_prefix.lower())]
+    if conf_cols:
+        fig, ax = plt.subplots(figsize=(6, 3))
+        # Flatten all confidence values
+        all_conf = df[conf_cols].values.flatten()
+        all_conf = all_conf[~np.isnan(all_conf)]  # Remove NaNs
+        ax.hist(all_conf, bins=50, alpha=0.7, color='green', edgecolor='black')
+        from .config import CFG
+        ax.axvline(CFG.CONF_THRESH, color='red', linestyle='--', linewidth=2, label=f'Threshold ({CFG.CONF_THRESH})')
+        ax.set_title('Confidence Distribution', fontsize=14, fontweight='bold')
+        ax.set_xlabel('Confidence Score')
+        ax.set_ylabel('Frequency')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        # Add statistics
+        ax.text(0.02, 0.98, f'Mean: {np.mean(all_conf):.3f}\nStd: {np.std(all_conf):.3f}',
+                transform=ax.transAxes, verticalalignment='top',
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        plt.tight_layout()
+        plt.show()
+
+def plot_time_series(df, landmark_idx=37, title="Landmark Time Series"):
+    """Plot x and y coordinates over time for a specific landmark."""
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 3), sharex=True)
+    # Find columns for this landmark
+    x_col = f'x{landmark_idx}'
+    y_col = f'y{landmark_idx}'
+    # Check case-insensitive
+    x_col = next((c for c in df.columns if c.lower() == x_col.lower()), None)
+    y_col = next((c for c in df.columns if c.lower() == y_col.lower()), None)
+    if x_col and y_col:
+        frames = np.arange(len(df))
+        # Plot X coordinate
+        ax1.plot(frames, df[x_col], linewidth=1, color='blue', alpha=0.7)
+        ax1.set_ylabel('X Coordinate', fontsize=10)
+        ax1.set_title(f'{title} - Landmark {landmark_idx}', fontsize=12, fontweight='bold')
+        ax1.grid(True, alpha=0.3)
+        # Highlight NaN regions
+        nan_mask = pd.isna(df[x_col])
+        if nan_mask.any():
+            ax1.fill_between(frames, ax1.get_ylim()[0], ax1.get_ylim()[1], where=nan_mask, alpha=0.3, color='red', label='Missing data')
+        # Plot Y coordinate
+        ax2.plot(frames, df[y_col], linewidth=1, color='green', alpha=0.7)
+        ax2.set_xlabel('Frame Number', fontsize=10)
+        ax2.set_ylabel('Y Coordinate', fontsize=10)
+        ax2.grid(True, alpha=0.3)
+        # Highlight NaN regions
+        if nan_mask.any():
+            ax2.fill_between(frames, ax2.get_ylim()[0], ax2.get_ylim()[1], where=nan_mask, alpha=0.3, color='red')
+            ax1.legend(loc='upper right')
+    plt.tight_layout()
+    plt.show()
+
+def check_files_exist(pattern, directory):
+    """Check if files matching pattern exist in directory."""
+    from pathlib import Path
+    dir_path = Path(directory)
+    if dir_path.exists():
+        files = list(dir_path.glob(pattern))
+        return len(files) > 0, files
+    return False, []
+
+def check_all_step_outputs():
+    """Check completion status of all pipeline steps."""
+    from .config import CFG
+    from pathlib import Path
+    import pandas as pd
+    steps = {
+        "Step 1 - Raw Data": (CFG.RAW_DIR, "*_pose.csv"),
+        "Step 2 - Filtered": (Path(CFG.OUT_BASE) / "reduced", "*_reduced.csv"),
+        "Step 3 - Masked": (Path(CFG.OUT_BASE) / "masked", "*_masked.csv"),
+        "Step 4 - Interpolated": (Path(CFG.OUT_BASE) / "interp_filtered", "*_interp_filt.csv"),
+        "Step 5 - Normalized": (Path(CFG.OUT_BASE) / "norm_screen", "*_norm.csv"),
+        "Step 6 - Templates": (Path(CFG.OUT_BASE) / "templates", "*.csv"),
+        "Step 7 - Features": (Path(CFG.OUT_BASE) / "features", "*.csv"),
+        "Step 8 - Linear Metrics": (Path(CFG.OUT_BASE) / "linear_metrics", "*_linear.csv")
+    }
+    status_data = []
+    for step_name, (directory, pattern) in steps.items():
+        exists, files = check_files_exist(pattern, directory)
+        status_data.append({
+            'Step': step_name,
+            'Status': 'Complete' if exists else '\u23f3 Pending',
+            'Files': len(files),
+            'Directory': str(directory)
+        })
+    return pd.DataFrame(status_data)
+
+def get_pipeline_completion_percentage():
+    """Calculate percentage of pipeline steps completed."""
+    status_df = check_all_step_outputs()
+    completed = (status_df['Status'] == 'Complete').sum()
+    total = len(status_df)
+    return (completed / total) * 100, completed, total
+
+def display_status(step_name, exists, file_count=0):
+    """Display status of a processing step."""
+    from IPython.display import display, HTML
+    if exists:
+        status = f"<b>{step_name}</b>: Already processed ({file_count} files found)"
+        color = "green"
+    else:
+        status = f"<b>{step_name}</b>: Needs processing"
+        color = "orange"
+    display(HTML(f'<div style="padding:10px;background-color:{color};opacity:0.2;border-radius:5px;">{status}</div>'))
+
 
 # --- Build Procrustes-aligned coordinates for a slice (and a couple features) ---
 def procrustes_transform_series(

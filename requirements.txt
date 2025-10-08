@@ -25,10 +25,8 @@ rpy2>=3.4.5
 # Optional: For advanced plotting
 plotly>=5.0.0
 
-# Future modules (commented out for now)
-# For ECG analysis:
-# neurokit2>=0.2.0
-# heartpy>=1.2.7
+# For ECG and GSR analysis:
+neurokit2>=0.2.0
 
 # For GSR analysis:
 # bioread>=3.0.0

@@ -2,11 +2,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from typing import List, Tuple
-from .config import CFG, SCIPY_AVAILABLE
-
-# Local import only when available
-if SCIPY_AVAILABLE:
-    from scipy.signal import butter, filtfilt  # type: ignore
+from .config import CFG
+from scipy.signal import butter, filtfilt  # type: ignore
 
 def find_nan_runs(mask: np.ndarray) -> List[Tuple[int, int]]:
     runs = []
@@ -58,8 +55,6 @@ def butterworth_segment_filter(series: pd.Series, order: int, cutoff_hz: float, 
     Low-pass Butterworth filtering applied per contiguous finite (non-NaN/inf) segment.
     Segments with length <= padlen are left UNFILTERED to avoid filtfilt ValueError.
     """
-    if not SCIPY_AVAILABLE:
-        raise RuntimeError("scipy is required for Butterworth filtering.")
 
     # Work on a float copy; keep the original index for return
     x = series.astype(float).values.copy()

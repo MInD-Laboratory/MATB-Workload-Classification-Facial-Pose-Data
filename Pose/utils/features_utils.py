@@ -387,7 +387,7 @@ def compute_linear_from_perframe_dir(per_frame_dir: Path,
         pid = str(df["participant"].iloc[0]) if "participant" in df.columns and len(df) else "NA"
         trial = str(df["session_number"].iloc[0]) if "session_number" in df.columns and len(df) else "NA"
         # Metric columns = everything except metadata columns
-        metric_cols = [c for c in df.columns if c not in ("participant","condition","frame","interocular")]
+        metric_cols = [c for c in df.columns if c not in ("participant","condition","frame","interocular","session_number")]
 
         # Interocular distance (used for normalization if available)
         io = df["interocular"].to_numpy(float) if "interocular" in df.columns else np.full(len(df), np.nan)
@@ -429,7 +429,23 @@ def compute_linear_from_perframe_dir(per_frame_dir: Path,
             # --- Process each metric within the window ---
             for k, arr in scaled.items():
                 seg = arr[s:e]  # Segment of data for this metric
-
+                if np.any(~np.isfinite(seg)) or len(seg) < 3:
+                    base[f"{k}_mean"] = np.nan
+                else:
+                    base[f"{k}_mean"] = float(np.nanmean(seg))
+                # Z-score normalize the segment (per window, per metric)
+                if CFG.ZSCORE_PER_WINDOW:
+                    if np.std(seg) > 1e-8:
+                        seg = (seg - np.mean(seg)) / np.std(seg)
+                    else:
+                        seg = seg - np.mean(seg)
+                elif CFG.MIN_MAX_NORMALIZE_PER_WINDOW:
+                    min_val = np.nanmin(seg)
+                    max_val = np.nanmax(seg)
+                    if (max_val - min_val) > 1e-8:
+                        seg = (seg - min_val) / (max_val - min_val)
+                    else:
+                        seg = seg - min_val
                 if np.any(~np.isfinite(seg)) or len(seg) < 3:
                     # Drop if window has NaNs or is too short
                     drops_agg[k] = drops_agg.get(k, 0) + 1
@@ -442,7 +458,6 @@ def compute_linear_from_perframe_dir(per_frame_dir: Path,
                     base[f"{k}_mean_abs_vel"] = v
                     base[f"{k}_mean_abs_acc"] = a
                     base[f"{k}_rms"] = r
-
             rows.append(base)  # Store results for this window
 
     # --- Write results to CSV ---

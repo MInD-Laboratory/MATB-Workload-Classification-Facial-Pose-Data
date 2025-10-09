@@ -618,7 +618,7 @@ def step_8_compute_linear_metrics() -> None:
                 out_path = lm_dir / f"{feature_type}_linear.csv"
                 compute_linear_from_perframe_dir(
                     per_frame_dir, out_path, CFG.FPS, CFG.WINDOW_SECONDS,
-                    CFG.WINDOW_OVERLAP, scale_by_interocular=CFG.SCALE_BY_INTEROCULAR
+                    CFG.WINDOW_OVERLAP,scale_by_interocular=(feature_type == "original")
                 )
                 print(f"Linear metrics computed for {feature_type}: {out_path}")
             else:

@@ -101,6 +101,10 @@ class Config:
     SAVE_PER_FRAME_PROCRUSTES_GLOBAL: bool = True  # Save frame-level features (global)
     SAVE_PER_FRAME_PROCRUSTES_PARTICIPANT: bool = True  # Save frame-level features (participant)
     SAVE_PER_FRAME_ORIGINAL: bool = True  # Save frame-level features (original)
+    
+    # Save windowed features for different normalizations (set only one to True)
+    ZSCORE_PER_WINDOW: bool = True  # Z-score features within each window
+    MIN_MAX_NORMALIZE_PER_WINDOW: bool = False  # Min-max scale features to [0,1] within each window
 
     # File overwrite behavior
     OVERWRITE: bool = False   # Overwrite existing processed files

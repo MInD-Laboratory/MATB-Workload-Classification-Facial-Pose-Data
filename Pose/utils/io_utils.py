@@ -137,7 +137,6 @@ def write_per_frame_metrics(out_root: Path, source: str, participant: str, trial
     })
     for k, arr in perframe.items():
         df_pf[k] = arr
-    print(f"Per-frame DataFrame columns: {df_pf.columns.tolist()}")
     # Write individual trial CSV
     out_path = out_dir / f"{participant}_{trial_num}_perframe.csv"
     df_pf.to_csv(out_path, index=False)

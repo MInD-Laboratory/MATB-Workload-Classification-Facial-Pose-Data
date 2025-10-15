@@ -96,7 +96,7 @@ def barplot_ax(ax, means, sems, pvals,
                ylabel, metric_name,
                colors=None,
                bar_width=0.80,
-               ylim_padding=(0.4, 0.1)):
+               ylim_padding=(0.1, 0.1)):
     """
     Draw a bar plot with error bars and significance brackets for three conditions.
     ax: matplotlib axis
@@ -141,8 +141,7 @@ def barplot_ax(ax, means, sems, pvals,
     ax.set_xticks([])
     wrapped_ylabel = "\n".join(textwrap.wrap(ylabel, width=25))
     ax.set_ylabel(wrapped_ylabel, weight='bold', fontsize=12)
-    ax.set_ylim(y_min - ylim_padding[0]*y_span,
-                y_max + ylim_padding[1]*y_span + len(sig_pairs)*h_step)
+    ax.set_ylim(y_min - ylim_padding[0]*y_span, y_max + ylim_padding[1]*y_span + len(sig_pairs)*h_step)
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
     ax.spines[['top','right']].set_visible(False)

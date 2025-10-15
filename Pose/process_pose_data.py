@@ -41,16 +41,17 @@ import pandas as pd
 from tqdm import tqdm
 
 # Import configuration and flags
-from utils.config import CFG
+from utils.config import CFG, SCIPY_AVAILABLE, SCALE_BY_INTEROCULAR
 
 # Import utility functions
 from utils.io_utils import (
     ensure_dirs, load_raw_files, save_json_summary,
-    get_output_filename
+    get_output_filename, load_participant_info_file
 )
 from utils.preprocessing_utils import (
     parse_participant_trial, detect_conf_prefix_case_insensitive,
     relevant_indices, filter_df_to_relevant, confidence_mask,
+    load_participant_info, create_condition_mapping, get_condition_for_file
 )
 from utils.signal_utils import interpolate_run_limited, butterworth_segment_filter
 from utils.normalize_utils import normalize_to_screen, interocular_series
@@ -66,8 +67,16 @@ from utils.io_utils import write_per_frame_metrics
 # HELPER FUNCTIONS
 # ================================================================================================
 
-def check_steps_1_5_complete(files: List[Path]) -> bool:
-    """Check if all output files from steps 1-5 already exist."""
+def check_steps_1_5_complete(files: List[Path], condition_map: Dict[str, Dict[int, str]]) -> bool:
+    """Check if all output files from steps 1-5 already exist.
+
+    Args:
+        files: List of input pose CSV files
+        condition_map: Mapping from participant/trial to condition
+
+    Returns:
+        True if all normalized condition-based files exist, False otherwise
+    """
     if not CFG.SAVE_NORM:
         return False
     norm_dir = Path(CFG.OUT_BASE) / "norm_screen"
@@ -76,7 +85,8 @@ def check_steps_1_5_complete(files: List[Path]) -> bool:
     for fp in files:
         try:
             pid, trial_num = parse_participant_trial(fp.name)
-            out_name = get_output_filename(fp.name, pid, trial_num, "_norm")
+            condition = get_condition_for_file(fp.name, condition_map)
+            out_name = get_output_filename(fp.name, pid, condition, "_norm")
             out_path = norm_dir / out_name
             if not out_path.exists():
                 return False
@@ -85,19 +95,58 @@ def check_steps_1_5_complete(files: List[Path]) -> bool:
     return True
 
 
-def load_existing_normalized_data(files: List[Path]) -> Tuple[Dict, Dict]:
-    """Load existing normalized data for steps 6-8."""
+def load_existing_normalized_data(files: List[Path], condition_map: Dict[str, Dict[int, str]]) -> Tuple[Dict, Dict]:
+    """Load existing normalized data for steps 6-8.
+
+    Args:
+        files: List of input pose CSV files
+        condition_map: Mapping from participant/trial to condition
+
+    Returns:
+        Tuple of (perfile_data, perfile_meta) dictionaries
+    """
     perfile_data = {}
     perfile_meta = {}
     print("  Loading existing normalized data...")
     for fp in tqdm(files, desc="Loading normalized", unit="file"):
         pid, trial_num = parse_participant_trial(fp.name)
-        out_name = get_output_filename(fp.name, pid, trial_num, "_norm")
+        condition = get_condition_for_file(fp.name, condition_map)
+        out_name = get_output_filename(fp.name, pid, condition, "_norm")
         norm_path = Path(CFG.OUT_BASE) / "norm_screen" / out_name
         df_norm = pd.read_csv(norm_path)
         perfile_data[fp.name] = {"norm": df_norm}
-        perfile_meta[fp.name] = {"participant": pid, "trial": trial_num}
+        perfile_meta[fp.name] = {"participant": pid, "condition": condition}
     return perfile_data, perfile_meta
+
+
+def load_existing_templates() -> Tuple[Optional[pd.DataFrame], Dict[str, pd.DataFrame]]:
+    """Load existing templates from disk for steps 7-8.
+
+    Returns:
+        Tuple of (global_template, participant_templates)
+    """
+    template_dir = Path(CFG.OUT_BASE) / "templates"
+
+    # Load global template
+    global_template = None
+    global_template_path = template_dir / "global_template.csv"
+    if global_template_path.exists():
+        global_template = pd.read_csv(global_template_path)
+        print(f"  Loaded global template: {global_template.shape}")
+    else:
+        print(f"  Warning: Global template not found at {global_template_path}")
+
+    # Load participant templates
+    participant_templates = {}
+    if template_dir.exists():
+        for template_path in template_dir.glob("participant_*_template.csv"):
+            pid = template_path.stem.replace("participant_", "").replace("_template", "")
+            participant_templates[pid] = pd.read_csv(template_path)
+        print(f"  Loaded {len(participant_templates)} participant templates")
+    else:
+        print(f"  Warning: Template directory not found at {template_dir}")
+
+    return global_template, participant_templates
 
 
 # ================================================================================================
@@ -136,11 +185,12 @@ def step_1_load_raw_data(files: List[Path]) -> Dict[str, pd.DataFrame]:
 # STEP 2: FILTER TO RELEVANT KEYPOINTS
 # ================================================================================================
 
-def step_2_filter_keypoints(raw_data: Dict[str, pd.DataFrame]) -> Tuple[Dict, Dict]:
+def step_2_filter_keypoints(raw_data: Dict[str, pd.DataFrame], condition_map: Dict[str, Dict[int, str]]) -> Tuple[Dict, Dict]:
     """Step 2: Filter to relevant keypoints and detect confidence prefixes.
 
     Args:
         raw_data: Dictionary of raw DataFrames
+        condition_map: Mapping from participant/trial to condition
     Returns:
         Tuple of (filtered_data, metadata) dictionaries
     """
@@ -163,15 +213,16 @@ def step_2_filter_keypoints(raw_data: Dict[str, pd.DataFrame]) -> Tuple[Dict, Di
             df_reduced = filter_df_to_relevant(df_raw, conf_prefix, indices)
             filtered_data[filename] = df_reduced
             pid, trial_num = parse_participant_trial(filename)
+            condition = get_condition_for_file(filename, condition_map)
             metadata[filename] = {
                 "participant": pid,
-                "trial": trial_num,
+                "condition": condition,
                 "conf_prefix": conf_prefix,
                 "original_columns": len(df_raw.columns),
                 "filtered_columns": len(df_reduced.columns)
             }
             if CFG.SAVE_REDUCED:
-                out_name = get_output_filename(filename, pid, trial_num, "_reduced")
+                out_name = get_output_filename(filename, pid, condition, "_reduced")
                 out_path = Path(CFG.OUT_BASE) / "reduced" / out_name
                 if CFG.OVERWRITE or not out_path.exists():
                     df_reduced.to_csv(out_path, index=False)
@@ -218,8 +269,9 @@ def step_3_mask_low_confidence(filtered_data: Dict[str, pd.DataFrame],
             masked_data[filename] = df_masked
             masking_stats[filename] = stats["overall"]
             if CFG.SAVE_MASKED:
-                pid, trial_num = metadata[filename]["participant"], metadata[filename]["trial"]
-                out_name = get_output_filename(filename, pid, trial_num, "_masked")
+                pid = metadata[filename]["participant"]
+                condition = metadata[filename]["condition"]
+                out_name = get_output_filename(filename, pid, condition, "_masked")
                 out_path = Path(CFG.OUT_BASE) / "masked" / out_name
                 if CFG.OVERWRITE or not out_path.exists():
                     df_masked.to_csv(out_path, index=False)
@@ -255,6 +307,11 @@ def step_4_interpolate_filter(masked_data: Dict[str, pd.DataFrame],
         print("RUN_INTERP_FILTER=False. Cannot proceed safely.")
         sys.exit(1)
 
+    # Check SciPy availability for filtering operations
+    if not SCIPY_AVAILABLE:
+        print("ERROR: SciPy is required for RUN_INTERP_FILTER=True.")
+        print("Please install scipy (pip install scipy) or set RUN_INTERP_FILTER=False in config.")
+        sys.exit(1)
 
 
     interp_filtered_data = {}
@@ -283,8 +340,9 @@ def step_4_interpolate_filter(masked_data: Dict[str, pd.DataFrame],
 
             # Save processed file if requested
             if CFG.SAVE_INTERP_FILTERED:
-                pid, trial_num = metadata[filename]["participant"], metadata[filename]["trial"]
-                out_name = get_output_filename(filename, pid, trial_num, "_interp_filt")
+                pid = metadata[filename]["participant"]
+                condition = metadata[filename]["condition"]
+                out_name = get_output_filename(filename, pid, condition, "_interp_filt")
                 out_path = Path(CFG.OUT_BASE) / "interp_filtered" / out_name
                 if CFG.OVERWRITE or not out_path.exists():
                     df_processed.to_csv(out_path, index=False)
@@ -334,8 +392,9 @@ def step_5_normalize_coordinates(interp_filtered_data: Dict[str, pd.DataFrame],
 
             # Save normalized file if requested
             if CFG.SAVE_NORM:
-                pid, trial_num = metadata[filename]["participant"], metadata[filename]["trial"]
-                out_name = get_output_filename(filename, pid, trial_num, "_norm")
+                pid = metadata[filename]["participant"]
+                condition = metadata[filename]["condition"]
+                out_name = get_output_filename(filename, pid, condition, "_norm")
                 out_path = Path(CFG.OUT_BASE) / "norm_screen" / out_name
                 if CFG.OVERWRITE or not out_path.exists():
                     df_norm.to_csv(out_path, index=False)
@@ -493,7 +552,8 @@ def step_7_extract_features(normalized_data: Dict[str, pd.DataFrame],
     # Process each file
     for filename in tqdm(normalized_data.keys(), desc="Computing features", unit="file"):
         print(f"\nProcessing {filename}...")
-        pid, trial = metadata[filename]["participant"], metadata[filename]["trial"]
+        pid = metadata[filename]["participant"]
+        condition = metadata[filename]["condition"]
         df_norm = normalized_data[filename]
 
         # A) Procrustes features vs global template
@@ -503,7 +563,7 @@ def step_7_extract_features(normalized_data: Dict[str, pd.DataFrame],
                 io = interocular_series(df_norm, metadata[filename].get("conf_prefix")).values
                 n_frames = len(io)
                 if CFG.SAVE_PER_FRAME_PROCRUSTES_GLOBAL:
-                    write_per_frame_metrics(feat_dir, "procrustes_global", pid, trial, feats, io, n_frames)
+                    write_per_frame_metrics(feat_dir, "procrustes_global", pid, condition, feats, io, n_frames)
                 dfw, drops = window_features(feats, io, CFG.FPS, win, hop)
                 dfw.insert(0, "participant", pid)
                 dfw.insert(0, "source", "procrustes_global")
@@ -524,7 +584,7 @@ def step_7_extract_features(normalized_data: Dict[str, pd.DataFrame],
                 n_frames = len(io)
 
                 if CFG.SAVE_PER_FRAME_PROCRUSTES_PARTICIPANT:
-                    write_per_frame_metrics(feat_dir, "procrustes_participant", pid, trial, feats, io, n_frames)
+                    write_per_frame_metrics(feat_dir, "procrustes_participant", pid, condition, feats, io, n_frames)
                 dfw, drops = window_features(feats, io, CFG.FPS, win, hop)
                 dfw.insert(0, "participant", pid)
                 dfw.insert(0, "source", "procrustes_participant")
@@ -544,7 +604,7 @@ def step_7_extract_features(normalized_data: Dict[str, pd.DataFrame],
                 n_frames = len(io)
 
                 if CFG.SAVE_PER_FRAME_ORIGINAL:
-                    write_per_frame_metrics(feat_dir, "original", pid, trial, feats, io, n_frames)
+                    write_per_frame_metrics(feat_dir, "original", pid, condition, feats, io, n_frames)
 
                 dfw, drops = window_features(feats, io, CFG.FPS, win, hop)
                 dfw.insert(0, "participant", pid)
@@ -618,7 +678,7 @@ def step_8_compute_linear_metrics() -> None:
                 out_path = lm_dir / f"{feature_type}_linear.csv"
                 compute_linear_from_perframe_dir(
                     per_frame_dir, out_path, CFG.FPS, CFG.WINDOW_SECONDS,
-                    CFG.WINDOW_OVERLAP,scale_by_interocular=(feature_type == "original")
+                    CFG.WINDOW_OVERLAP, scale_by_interocular=SCALE_BY_INTEROCULAR
                 )
                 print(f"Linear metrics computed for {feature_type}: {out_path}")
             else:
@@ -634,12 +694,24 @@ def step_8_compute_linear_metrics() -> None:
 # MAIN PIPELINE FUNCTION
 # ================================================================================================
 
-def run_pose_processing_pipeline() -> None:
-    """Main pipeline function that orchestrates all 8 steps."""
+def run_pose_processing_pipeline(start_step: int = 1) -> None:
+    """Main pipeline function that orchestrates all 8 steps.
+
+    Args:
+        start_step: Step number to start from (1-8). Requires existing data from prior steps.
+    """
 
     print("="*80)
     print("POSE PROCESSING PIPELINE")
     print("="*80)
+
+    if start_step < 1 or start_step > 8:
+        print(f"ERROR: start_step must be between 1 and 8, got {start_step}")
+        sys.exit(1)
+
+    if start_step > 1:
+        print(f"Starting from step {start_step} (skipping steps 1-{start_step-1})")
+        print("NOTE: This requires existing data from previous steps.")
 
     # Print configuration
     print(f"Configuration:")
@@ -655,62 +727,97 @@ def run_pose_processing_pipeline() -> None:
     files = load_raw_files()
     print(f"✓ Found {len(files)} pose CSV files")
 
-    # Check if steps 1-5 are already complete
-    if not CFG.OVERWRITE and check_steps_1_5_complete(files):
-        print(f"\nSteps 1-5 already complete (found all {len(files)} normalized condition-based files)")
-        print("Loading existing data and proceeding to steps 6-8...")
+    # Load participant info and create condition mapping
+    print("\nLoading participant info and creating condition mapping...")
+    try:
+        participant_info_path = load_participant_info_file()
+        participant_info = load_participant_info(str(participant_info_path))
+        condition_map = create_condition_mapping(participant_info)
+        print(f"✓ Loaded condition mapping for {len(condition_map)} participants")
+    except FileNotFoundError as e:
+        print(f"ERROR: {e}")
+        print("Please ensure participant_info.csv exists in the data directory.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"ERROR loading participant info: {e}")
+        sys.exit(1)
 
-        # Load existing normalized data
-        perfile_data, perfile_meta = load_existing_normalized_data(files)
+    # Initialize variables that might be needed by later steps
+    normalized_data = {}
+    global_template = None
+    participant_templates = {}
+
+    # STEPS 1-5: Data loading and preprocessing
+    if start_step <= 5:
+        # Check if steps 1-5 are already complete and can be skipped
+        if start_step == 1 and not CFG.OVERWRITE and check_steps_1_5_complete(files, condition_map):
+            print(f"\nSteps 1-5 already complete (found all {len(files)} normalized condition-based files)")
+            print("Loading existing data and proceeding to steps 6-8...")
+
+            # Load existing normalized data
+            perfile_data, perfile_meta = load_existing_normalized_data(files, condition_map)
+            normalized_data = {filename: data["norm"] for filename, data in perfile_data.items()}
+
+        else:
+            # Run steps 1-5
+            if CFG.OVERWRITE:
+                print("\nOVERWRITE=True: Running steps 1-5 regardless of existing files")
+            else:
+                print("\nSteps 1-5 needed: Missing some condition-based normalized files")
+
+            # Step 1: Load raw data
+            raw_data = step_1_load_raw_data(files)
+            if not raw_data:
+                print("No data loaded. Exiting.")
+                return
+
+            # Step 2: Filter to relevant keypoints
+            filtered_data, perfile_meta = step_2_filter_keypoints(raw_data, condition_map)
+            if not filtered_data:
+                print("No data after filtering. Exiting.")
+                return
+
+            # Step 3: Mask low-confidence landmarks
+            masked_data, masking_stats = step_3_mask_low_confidence(filtered_data, perfile_meta)
+            if not masked_data:
+                print("No data after masking. Exiting.")
+                return
+
+            # Step 4: Interpolate and filter
+            interp_filtered_data = step_4_interpolate_filter(masked_data, perfile_meta)
+            if not interp_filtered_data:
+                print("No data after interpolation/filtering. Exiting.")
+                return
+
+            # Step 5: Normalize coordinates
+            normalized_data = step_5_normalize_coordinates(interp_filtered_data, perfile_meta)
+            if not normalized_data:
+                print("No data after normalization. Exiting.")
+                return
+
+    # STEPS 6-8: Templates and Features
+
+    # If starting from step 6+, load existing normalized data
+    if start_step >= 6:
+        print("\nLoading existing normalized data from disk...")
+        perfile_data, perfile_meta = load_existing_normalized_data(files, condition_map)
         normalized_data = {filename: data["norm"] for filename, data in perfile_data.items()}
 
-    else:
-        # Run steps 1-5
-        if CFG.OVERWRITE:
-            print("\nOVERWRITE=True: Running steps 1-5 regardless of existing files")
-        else:
-            print("\nSteps 1-5 needed: Missing some condition-based normalized files")
+    # Step 6: Build templates (run if start_step <= 6)
+    if start_step <= 6:
+        global_template, participant_templates = step_6_build_templates(normalized_data, perfile_meta)
+    elif start_step >= 7:
+        # Load existing templates if starting from step 7+
+        print("\nLoading existing templates from disk...")
+        global_template, participant_templates = load_existing_templates()
 
-        # Step 1: Load raw data
-        raw_data = step_1_load_raw_data(files)
-        if not raw_data:
-            print("No data loaded. Exiting.")
-            return
+    # Step 7: Extract features (run if start_step <= 7)
+    if start_step <= 7:
+        step_7_extract_features(normalized_data, perfile_meta, global_template, participant_templates)
 
-        # Step 2: Filter to relevant keypoints
-        filtered_data, perfile_meta = step_2_filter_keypoints(raw_data)
-        if not filtered_data:
-            print("No data after filtering. Exiting.")
-            return
-
-        # Step 3: Mask low-confidence landmarks
-        masked_data, masking_stats = step_3_mask_low_confidence(filtered_data, perfile_meta)
-        if not masked_data:
-            print("No data after masking. Exiting.")
-            return
-
-        # Step 4: Interpolate and filter
-        interp_filtered_data = step_4_interpolate_filter(masked_data, perfile_meta)
-        if not interp_filtered_data:
-            print("No data after interpolation/filtering. Exiting.")
-            return
-
-        # Step 5: Normalize coordinates
-        normalized_data = step_5_normalize_coordinates(interp_filtered_data, perfile_meta)
-        if not normalized_data:
-            print("No data after normalization. Exiting.")
-            return
-
-    # Steps 6-8: Templates and Features (always run when requested)
-
-    # Step 6: Build templates
-    global_template, participant_templates = step_6_build_templates(normalized_data, perfile_meta)
-
-    # Step 7: Extract features
-    step_7_extract_features(normalized_data, perfile_meta, global_template, participant_templates)
-
-    # Step 8: Compute linear metrics
-    step_8_compute_linear_metrics()
+    # Step 8: Compute linear metrics (always run if we reach here)
+    if start_step <= 8:
+        step_8_compute_linear_metrics()
 
     # Save processing summary
     summary = {
@@ -770,6 +877,16 @@ files already exist (unless --overwrite is specified).
         help="Force reprocessing of steps 1-5 even if outputs exist"
     )
 
+    parser.add_argument(
+        "--start-step",
+        type=int,
+        default=1,
+        choices=range(1, 9),
+        metavar="N",
+        help="Start pipeline from step N (1-8). Requires existing data from prior steps. "
+             "Example: --start-step 7 to run only feature extraction and linear metrics"
+    )
+
     args = parser.parse_args()
 
     # Apply command line overrides
@@ -778,4 +895,4 @@ files already exist (unless --overwrite is specified).
         config_module.CFG.OVERWRITE = True
 
     # Run the pipeline
-    run_pose_processing_pipeline()
+    run_pose_processing_pipeline(start_step=args.start_step)

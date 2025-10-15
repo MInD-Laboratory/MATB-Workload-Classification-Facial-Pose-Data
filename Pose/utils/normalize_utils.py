@@ -61,7 +61,7 @@ def interocular_series(df: pd.DataFrame, conf_prefix: Optional[str] = None) -> p
     """
     Calculate inter-ocular distance for each frame.
 
-    Uses **landmarks 37 (right eye)** and **46 (left eye)** in 1-based
+    Uses **landmarks 37 (left eye)** and **46 (right eye)** in 1-based
     OpenPose indexing. Inter-ocular distance is computed as
     the Euclidean distance between these two points.
     """

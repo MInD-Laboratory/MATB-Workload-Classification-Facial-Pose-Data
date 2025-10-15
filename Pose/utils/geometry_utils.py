@@ -8,11 +8,11 @@ import math
 import numpy as np
 from typing import Tuple
 
-def procrustes_frame_to_template(frame_xy: np.ndarray, templ_xy: np.ndarray, available_mask: np.ndarray) -> Tuple[bool, float, float, float, np.ndarray, np.ndarray]:
+def procrustes_frame_to_template(frame_xy: np.ndarray, templ_xy: np.ndarray, available_mask: np.ndarray) -> Tuple[bool, float, float, float, float, np.ndarray, np.ndarray]:
     """Align frame landmarks to template using Procrustes analysis.
 
     Performs Procrustes superimposition to find the optimal rigid transformation
-    (rotation, translation, and uniform scaling) that aligns the source frame
+    (rotation, translation, and non-uniform scaling) that aligns the source frame
     landmarks to a reference template. Uses only landmarks marked as available.
 
     Args:
@@ -23,7 +23,8 @@ def procrustes_frame_to_template(frame_xy: np.ndarray, templ_xy: np.ndarray, ava
     Returns:
         Tuple containing:
         - success: True if alignment succeeded, False if insufficient landmarks
-        - scale: Scaling factor applied to align shapes
+        - sx: Scaling factor in x direction
+        - sy: Scaling factor in y direction
         - tx: Translation in x direction
         - ty: Translation in y direction
         - R: 2x2 rotation matrix
@@ -32,7 +33,7 @@ def procrustes_frame_to_template(frame_xy: np.ndarray, templ_xy: np.ndarray, ava
     Note:
         Requires at least 3 valid landmarks for alignment.
         Uses SVD to find optimal rotation matrix.
-        Handles reflection by ensuring rotation has positive determinant.
+        Allows non-uniform scaling (different sx and sy values).
 
     Potential Issues:
         - Division by zero if varX is 0 (all points coincident) - handled but scale defaults to 1.0

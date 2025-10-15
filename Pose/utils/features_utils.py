@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Dict, List, Optional, Tuple
 import math
+import re
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -340,6 +341,51 @@ def original_features_for_file(df_norm: pd.DataFrame) -> Dict[str, np.ndarray]:
         "center_face_y": cfm_y
     }
 
+# --------- Per-frame derivatives --------------------------------------------
+def add_perframe_derivatives(df: pd.DataFrame, fps: float = 60.0) -> pd.DataFrame:
+    """
+    Append *_vel and *_acc columns (via np.gradient) for every numeric column.
+
+    Computes velocity (first derivative) and acceleration (second derivative)
+    for all numeric columns in the dataframe, adding them as new columns
+    with _vel and _acc suffixes.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input dataframe with per-frame pose metrics
+    fps : float, default=60.0
+        Sampling rate in frames per second (for proper time scaling)
+
+    Returns
+    -------
+    pd.DataFrame
+        Copy of input dataframe with added velocity and acceleration columns
+
+    Note
+    ----
+    - Uses np.gradient for centered finite differences (more accurate than np.diff)
+    - Skips metadata columns: participant, condition, session_number, frame, interocular
+    - Velocity units: original_units / second
+    - Acceleration units: original_units / second²
+    """
+    out = df.copy()
+    num_cols = out.select_dtypes(include=[np.number]).columns
+
+    for col in num_cols:
+        # Skip metadata columns
+        if col in {"participant", "condition", "session_number", "frame", "interocular"}:
+            continue
+
+        s = out[col].to_numpy(float)
+        v = np.gradient(s) * fps          # velocity: per second
+        a = np.gradient(v) * fps          # acceleration: per second²
+
+        out[f"{col}_vel"] = v
+        out[f"{col}_acc"] = a
+
+    return out
+
 # --------- Linear-from-perframe helper --------------------------------------
 def compute_linear_from_perframe_dir(per_frame_dir: Path,
                                      out_csv: Path,
@@ -348,8 +394,11 @@ def compute_linear_from_perframe_dir(per_frame_dir: Path,
                                      window_overlap: float,
                                      scale_by_interocular: bool = True) -> Dict[str, int]:
     """
-    Compute linear (time-domain) metrics from per-frame pose/behavioral data
-    stored in individual CSV files.
+    Windowed summaries over per-frame columns already on disk (values, *_vel, *_acc).
+
+    Computes rich statistical metrics for each metric across sliding windows.
+    First adds velocity and acceleration derivatives, then computes statistics
+    separately for the base value, velocity, and acceleration signals.
 
     Parameters
     ----------
@@ -371,97 +420,126 @@ def compute_linear_from_perframe_dir(per_frame_dir: Path,
     -------
     Dict[str, int]
         Dictionary mapping metric name → number of dropped windows due to invalid data.
-    """
-    rows = []                       # Collect results for all windows across all files
-    drops_agg: Dict[str, int] = {}  # Count of dropped windows per metric
-    files = [
-    f for f in sorted(per_frame_dir.glob("*.csv"))
-    if not f.name.startswith("all_")
-    ]
 
-    # --- Process each per-frame CSV file ---
+    Note
+    ----
+    For each metric, computes 9 statistics (min, max, mean, rms, std, median, p25, p75, autocorr1)
+    for THREE signals: base value, velocity (_vel), and acceleration (_acc).
+    This yields 27 features per original metric.
+
+    Statistics computed:
+    - min, max: range of values
+    - mean: central tendency (skipped for zscore normalized data)
+    - rms: root mean square (energy measure)
+    - std: standard deviation (variability)
+    - median: robust central tendency
+    - p25, p75: quartiles (distribution shape)
+    - autocorr1: lag-1 autocorrelation (temporal smoothness)
+    """
+    rows = []
+    drops_agg: Dict[str, int] = {}
+    files = sorted(per_frame_dir.glob("*.csv"))
+
+    # Heuristic: subfolder name encodes normalization (e.g., ...__zscore)
+    norm_is_z = "__zscore" in per_frame_dir.name.lower()
+
     for pf in files:
+        # Skip aggregated files
+        if pf.name.startswith("all_"):
+            continue
+
         df = pd.read_csv(pf)
 
-        # Participant ID and condition labels, if present
+        # Add velocity and acceleration derivatives for all metrics
+        df = add_perframe_derivatives(df, fps=fps)
+
+        # Extract metadata
         pid = str(df["participant"].iloc[0]) if "participant" in df.columns and len(df) else "NA"
-        trial = str(df["session_number"].iloc[0]) if "session_number" in df.columns and len(df) else "NA"
-        # Metric columns = everything except metadata columns
-        metric_cols = [c for c in df.columns if c not in ("participant","condition","frame","interocular","session_number")]
+        cond = str(df["session_number"].iloc[0]) if "session_number" in df.columns and len(df) else "NA"
 
-        # Interocular distance (used for normalization if available)
+        # Stat columns = all numeric, minus bookkeeping
+        exclude = {"participant", "condition", "frame", "interocular", "session_number"}
+        metric_cols = [c for c in df.columns if c not in exclude and np.issubdtype(df[c].dtype, np.number)]
+
+        # Optional scale for distance-like metrics only (values and their *_vel/_acc kept as-is)
         io = df["interocular"].to_numpy(float) if "interocular" in df.columns else np.full(len(df), np.nan)
+        scaled: Dict[str, np.ndarray] = {}
 
-        # --- Scale metrics if appropriate ---
-        scaled = {}
         for k in metric_cols:
-            arr = df[k].to_numpy(float)
-            if scale_by_interocular and is_distance_like_metric(k) and np.isfinite(io).any():
-                # Normalize distance-like metrics by interocular distance
-                # Protect against division by zero or very small values
-                with np.errstate(divide='ignore', invalid='ignore'):
-                    scaled_arr = arr / io
-                    # Replace inf/nan from division with original unscaled values
-                    bad_mask = ~np.isfinite(scaled_arr) | (io < 1e-6)
-                    scaled_arr[bad_mask] = arr[bad_mask]
-                    scaled[k] = scaled_arr
+            arr = pd.to_numeric(df[k], errors="coerce").to_numpy(float)
+
+            # Extract base metric name (remove _vel or _acc suffix)
+            base = re.sub(r"_(vel|acc)$", "", k)
+            dist_like = is_distance_like_metric(base)
+
+            if scale_by_interocular and dist_like and np.isfinite(io).any():
+                # Pre-check for safe division to avoid unnecessary inf/nan computation
+                arr2 = arr.copy()                           # Start with original values
+                good = np.isfinite(io) & (io >= 1e-6)       # Pre-identify safe indices
+                arr2[good] = arr[good] / io[good]           # Only divide where safe
+                scaled[k] = arr2
             else:
                 scaled[k] = arr
 
-        # --- Compute windowing parameters ---
-        win = window_seconds * fps                        # Window size in frames
-        hop = int(win * (1.0 - window_overlap))           # Step size (with overlap)
-        hop = max(1, hop)                                 # Ensure hop is at least 1
-        n = len(df)                                       # Total number of frames in trial
+        win = window_seconds * fps
+        hop = max(1, int(win * (1.0 - window_overlap)))
+        n = len(df)
 
-        # --- Slide windows across the sequence ---
         for (s, e, widx) in windows_indices(n, win, hop):
-            # Base metadata for this window
             base = {
                 "source": per_frame_dir.name,
-                "participant_id": pid,
-                "session_number": trial,
+                "participant": pid,
+                "condition": cond,
                 "window_index": widx,
                 "t_start_frame": s,
                 "t_end_frame": e
             }
 
-            # --- Process each metric within the window ---
             for k, arr in scaled.items():
-                seg = arr[s:e]  # Segment of data for this metric
-                if np.any(~np.isfinite(seg)) or len(seg) < 3:
-                    base[f"{k}_mean"] = np.nan
-                else:
-                    base[f"{k}_mean"] = float(np.nanmean(seg))
-                # Z-score normalize the segment (per window, per metric)
-                if CFG.ZSCORE_PER_WINDOW:
-                    if np.std(seg) > 1e-8:
-                        seg = (seg - np.mean(seg)) / np.std(seg)
-                    else:
-                        seg = seg - np.mean(seg)
-                elif CFG.MIN_MAX_NORMALIZE_PER_WINDOW:
-                    min_val = np.nanmin(seg)
-                    max_val = np.nanmax(seg)
-                    if (max_val - min_val) > 1e-8:
-                        seg = (seg - min_val) / (max_val - min_val)
-                    else:
-                        seg = seg - min_val
-                if np.any(~np.isfinite(seg)) or len(seg) < 3:
-                    # Drop if window has NaNs or is too short
-                    drops_agg[k] = drops_agg.get(k, 0) + 1
-                    base[f"{k}_mean_abs_vel"] = np.nan
-                    base[f"{k}_mean_abs_acc"] = np.nan
-                    base[f"{k}_rms"] = np.nan
-                else:
-                    # Compute velocity, acceleration, RMS from segment
-                    v, a, r = linear_metrics(seg.astype(float), fps)
-                    base[f"{k}_mean_abs_vel"] = v
-                    base[f"{k}_mean_abs_acc"] = a
-                    base[f"{k}_rms"] = r
-            rows.append(base)  # Store results for this window
+                seg = arr[s:e]
 
-    # --- Write results to CSV ---
+                if np.any(~np.isfinite(seg)) or len(seg) == 0:
+                    drops_agg[k] = drops_agg.get(k, 0) + 1
+                    base[f"{k}_min"] = np.nan
+                    base[f"{k}_max"] = np.nan
+                    base[f"{k}_rms"] = np.nan
+                    if not norm_is_z:
+                        base[f"{k}_mean"] = np.nan
+                    # New statistical features
+                    base[f"{k}_std"] = np.nan
+                    base[f"{k}_median"] = np.nan
+                    base[f"{k}_p25"] = np.nan
+                    base[f"{k}_p75"] = np.nan
+                    base[f"{k}_autocorr1"] = np.nan
+                    continue
+
+                base[f"{k}_min"] = float(np.min(seg))
+                base[f"{k}_max"] = float(np.max(seg))
+                base[f"{k}_rms"] = float(np.sqrt(np.mean(seg**2)))
+                if not norm_is_z:
+                    base[f"{k}_mean"] = float(np.mean(seg))
+
+                # NEW: Standard deviation (captures variability around mean)
+                base[f"{k}_std"] = float(np.std(seg))
+
+                # NEW: Median (robust central tendency, less sensitive to outliers)
+                base[f"{k}_median"] = float(np.median(seg))
+
+                # NEW: Percentiles (25th and 75th quartiles)
+                base[f"{k}_p25"] = float(np.percentile(seg, 25))
+                base[f"{k}_p75"] = float(np.percentile(seg, 75))
+
+                # NEW: Lag-1 autocorrelation (temporal smoothness/persistence)
+                if len(seg) > 1:
+                    try:
+                        base[f"{k}_autocorr1"] = float(np.corrcoef(seg[:-1], seg[1:])[0, 1])
+                    except:
+                        base[f"{k}_autocorr1"] = np.nan
+                else:
+                    base[f"{k}_autocorr1"] = np.nan
+
+            rows.append(base)
+
     out_csv.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(rows).to_csv(out_csv, index=False)
-
     return drops_agg

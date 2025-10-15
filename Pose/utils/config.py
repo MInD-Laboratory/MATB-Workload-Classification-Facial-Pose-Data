@@ -8,6 +8,28 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 
+# Load environment variables from .env file if present (for local development)
+# This allows developers to specify custom data paths without modifying code
+# When published, users won't have a .env file and will use default paths
+try:
+    from dotenv import load_dotenv
+    # Look for .env file in project root (two levels up from this file)
+    env_path = Path(__file__).parent.parent.parent / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+except ImportError:
+    # python-dotenv not installed - environment variables can still be set via shell
+    pass
+
+# Check SciPy availability for optional filtering operations
+# SciPy is used for Butterworth filtering and signal processing
+try:
+    from scipy.signal import butter, filtfilt  # noqa: F401
+    SCIPY_AVAILABLE = True
+except Exception:
+    # SciPy not available - filtering operations will be skipped
+    SCIPY_AVAILABLE = False
+
 @dataclass
 class Config:
     """Main configuration class containing all processing parameters.
@@ -37,11 +59,11 @@ class Config:
     # Directory paths - can be overridden by environment variables
     # Use paths relative to the Pose directory (where this config file is located)
     _BASE_DIR: str = str(Path(__file__).parent.parent)  # Pose directory
-    RAW_DIR: str = r"D:\Onedrive\Macquarie University\Complexity in Action - Mind and Interaction Dynamics\PNAS-MATB\pose_data"
+    RAW_DIR: str = os.getenv("POSE_RAW_DIR", str(Path(_BASE_DIR) / "data" / "pose_data"))
     OUT_BASE: str = os.getenv("POSE_OUT_BASE", str(Path(_BASE_DIR) / "data" / "processed"))
 
     # Participant info file - can be overridden by environment variable
-    PARTICIPANT_INFO_FILE: str = r"D:\Onedrive\Macquarie University\Complexity in Action - Mind and Interaction Dynamics\PNAS-MATB\participant_info.csv"
+    PARTICIPANT_INFO_FILE: str = os.getenv("PARTICIPANT_INFO_FILE", "participant_info.csv")
 
     # Video/image parameters
     FPS: int = 60  # Sampling rate of video capture
@@ -101,10 +123,6 @@ class Config:
     SAVE_PER_FRAME_PROCRUSTES_GLOBAL: bool = True  # Save frame-level features (global)
     SAVE_PER_FRAME_PROCRUSTES_PARTICIPANT: bool = True  # Save frame-level features (participant)
     SAVE_PER_FRAME_ORIGINAL: bool = True  # Save frame-level features (original)
-    
-    # Save windowed features for different normalizations (set only one to True)
-    ZSCORE_PER_WINDOW: bool = True  # Z-score features within each window
-    MIN_MAX_NORMALIZE_PER_WINDOW: bool = False  # Min-max scale features to [0,1] within each window
 
     # File overwrite behavior
     OVERWRITE: bool = False   # Overwrite existing processed files
@@ -112,3 +130,6 @@ class Config:
 
 # Global configuration instance
 CFG = Config()
+
+# Export commonly used flags at module level for convenience
+SCALE_BY_INTEROCULAR = CFG.SCALE_BY_INTEROCULAR

@@ -312,3 +312,140 @@ def eda_feature_extraction(
         # If EDA analysis fails, return empty DataFrame
         print(f"Warning: EDA feature extraction failed: {e}")
         return pd.DataFrame()
+
+
+# --- Windowing utilities ---
+
+def windows_indices(n: int, win: int, hop: int) -> list:
+    """Generate sliding window indices for time series analysis.
+
+    Creates overlapping or non-overlapping windows across a sequence.
+
+    Args:
+        n: Total length of the sequence (number of samples)
+        win: Window size in samples
+        hop: Step size between windows in samples (hop < win creates overlap)
+
+    Returns:
+        List of tuples: (start_index, end_index, window_index)
+
+    Example:
+        >>> windows_indices(1200, 600, 300)  # 50% overlap
+        [(0, 600, 0), (300, 900, 1), (600, 1200, 2)]
+    """
+    out = []
+    w = 0
+    start = 0
+
+    while start + win <= n:
+        out.append((start, start + win, w))
+        start += hop
+        w += 1
+
+    return out
+
+
+def extract_windowed_eda_features(
+    signals: pd.DataFrame,
+    window_seconds: int = None,
+    overlap: float = None,
+    sr: int = None
+) -> pd.DataFrame:
+    """Extract EDA features from windowed signal segments.
+
+    Applies sliding windows to EDA signals and computes interval-related
+    features for each window.
+
+    Args:
+        signals: DataFrame with processed EDA signals (from processing_eda_signal)
+        window_seconds: Window size in seconds (default: from config)
+        overlap: Window overlap fraction 0-1 (default: from config)
+        sr: Sampling rate in Hz (default: from config)
+
+    Returns:
+        DataFrame with one row per window containing:
+        - window_index: Window number
+        - t_start_sec: Start time in seconds
+        - t_end_sec: End time in seconds
+        - All EDA interval-related features
+
+    Example:
+        For 60-second windows with 50% overlap on 200-second signal:
+        - Window 0: 0-60s
+        - Window 1: 30-90s
+        - Window 2: 60-120s
+        - etc.
+    """
+    # Use config defaults if not specified
+    if sr is None:
+        sr = CFG.SAMPLE_RATE
+    if window_seconds is None:
+        window_seconds = CFG.WINDOW_SECONDS
+    if overlap is None:
+        overlap = CFG.WINDOW_OVERLAP
+
+    # Calculate window parameters in samples
+    win_samples = int(window_seconds * sr)
+    hop_samples = int(win_samples * (1 - overlap))
+
+    # Generate window indices
+    n_samples = len(signals)
+    windows = windows_indices(n_samples, win_samples, hop_samples)
+
+    if len(windows) == 0:
+        print(f"Warning: Signal too short for windowing (need {win_samples} samples, have {n_samples})")
+        return pd.DataFrame()
+
+    # Extract features for each window
+    window_features = []
+
+    for start, end, widx in windows:
+        # Extract window segment
+        window_data = signals.iloc[start:end].copy()
+
+        # Skip windows with insufficient data
+        if len(window_data) < win_samples * 0.9:  # Allow 10% tolerance
+            continue
+
+        # Check for missing data in critical columns
+        if window_data[['EDA_Clean', 'EDA_Phasic', 'EDA_Tonic']].isnull().any().any():
+            continue
+
+        try:
+            # Create epoch structure for NeuroKit2
+            window_data['Label'] = '1'
+            epochs = {'1': window_data}
+
+            # Extract interval-related features for this window
+            features = nk.eda_intervalrelated(epochs, sampling_rate=sr)
+
+            # Drop all-NaN columns
+            features = features.dropna(axis=1, how='all')
+
+            # Remove Label column if present
+            if 'Label' in features.columns:
+                features = features.drop('Label', axis=1)
+
+            # Add window metadata
+            features['window_index'] = widx
+            features['t_start_sec'] = start / sr
+            features['t_end_sec'] = end / sr
+
+            window_features.append(features)
+
+        except Exception as e:
+            print(f"Warning: Feature extraction failed for window {widx}: {e}")
+            continue
+
+    if len(window_features) == 0:
+        return pd.DataFrame()
+
+    # Combine all windows
+    result = pd.concat(window_features, ignore_index=True)
+
+    # Reorder columns: metadata first, then features
+    metadata_cols = ['window_index', 't_start_sec', 't_end_sec']
+    feature_cols = [c for c in result.columns if c not in metadata_cols]
+    result = result[metadata_cols + feature_cols]
+
+    return result

@@ -36,7 +36,7 @@ from utils.config import CFG
 from utils.ecg_utils import (
     import_zephyr_ecg_data,
     processing_ecg_signal,
-    ecg_feature_extraction,
+    extract_windowed_hrv_features,
     parse_ecg_filename,
     map_session_to_condition
 )
@@ -137,25 +137,25 @@ def process_single_file(
             signals['condition'] = condition
             signals.to_csv(signal_file, index=False)
 
-        # Extract HRV features (treating whole file as one continuous signal)
-        hrv_features = ecg_feature_extraction(
+        # Extract HRV features using 60-second windows with 50% overlap
+        hrv_features = extract_windowed_hrv_features(
             signals,
             rpeaks,
-            sr=CFG.SAMPLE_RATE,
-            save_output_folder='',  # Don't save intermediate outputs
-            baseline_correction=CFG.BASELINE_CORRECTION
+            window_seconds=CFG.WINDOW_SECONDS,
+            overlap=CFG.WINDOW_OVERLAP,
+            sr=CFG.SAMPLE_RATE
         )
 
         # Check if feature extraction succeeded
         if hrv_features.empty:
             return {
                 'status': 'error',
-                'error': 'HRV feature extraction failed',
+                'error': 'HRV feature extraction failed (signal may be too short or no R-peaks)',
                 'filename': filename,
                 'participant': participant_id
             }
 
-        # Add metadata to features
+        # Add metadata to features (participant, condition, filename)
         hrv_features['participant'] = participant_id
         hrv_features['condition'] = condition
         hrv_features['filename'] = filename
@@ -170,6 +170,7 @@ def process_single_file(
             'condition': condition,
             'filename': filename,
             'samples': len(signals),
+            'windows': len(hrv_features),
             'features': len(hrv_features.columns)
         }
 
@@ -315,7 +316,9 @@ def run_ecg_pipeline(overwrite: bool = False):
                 'cleaning_method': CFG.CLEANING_METHOD,
                 'peak_method': CFG.PEAK_METHOD,
                 'quality_method': CFG.QUALITY_METHOD,
-                'interpolation_method': CFG.INTERPOLATION_METHOD
+                'interpolation_method': CFG.INTERPOLATION_METHOD,
+                'window_seconds': CFG.WINDOW_SECONDS,
+                'window_overlap': CFG.WINDOW_OVERLAP
             },
             'files_processed': len(successful),
             'files_skipped': len(skipped),

@@ -77,7 +77,7 @@ class Config:
     INTERPOLATION_METHOD: str = "monotone_cubic"
 
     # === Window Parameters ===
-    # (for potential windowed analysis in future)
+    # Window size and overlap for windowed HRV feature extraction
     WINDOW_SECONDS: int = 60
     WINDOW_OVERLAP: float = 0.5
 

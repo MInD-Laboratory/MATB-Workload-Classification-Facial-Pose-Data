@@ -12,12 +12,16 @@ import numpy as np
 import pandas as pd
 import os
 import re
+import warnings
 import neurokit2 as nk
 import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Tuple, Optional
 
 from .config import CFG
+
+# Suppress NeuroKit2 warnings about DFA_alpha2 (expected for short windows)
+warnings.filterwarnings('ignore', message='.*DFA_alpha2.*')
 
 
 # --- Utility functions ---
@@ -278,14 +282,14 @@ def processing_ecg_signal(
                                           rpeaks=rpeaks['ECG_R_Peaks'],
                                           method=method_quality, approach=approach_quality)
         except ValueError:
-            quality_rpeak = np.NaN
+            quality_rpeak = np.nan
 
         try:
             quality_rpeak_uncorrected = nk.ecg_quality(ecg_cleaned, sampling_rate=sampling_rate,
                                                        rpeaks=rpeaks['ECG_R_Peaks_Uncorrected'],
                                                        method=method_quality, approach=approach_quality)
         except ValueError:
-            quality_rpeak_uncorrected = np.NaN
+            quality_rpeak_uncorrected = np.nan
 
         signals = pd.DataFrame({"ECG_Raw": ecg_signal,
                                 "ECG_Clean": ecg_cleaned,
@@ -376,3 +380,154 @@ def ecg_feature_extraction(
         # If HRV analysis fails (e.g., too few peaks), return empty DataFrame
         print(f"Warning: HRV feature extraction failed: {e}")
         return pd.DataFrame()
+
+
+# --- Windowing utilities ---
+
+def windows_indices(n: int, win: int, hop: int) -> list:
+    """Generate sliding window indices for time series analysis.
+
+    Creates overlapping or non-overlapping windows across a sequence.
+
+    Args:
+        n: Total length of the sequence (number of samples)
+        win: Window size in samples
+        hop: Step size between windows in samples (hop < win creates overlap)
+
+    Returns:
+        List of tuples: (start_index, end_index, window_index)
+
+    Example:
+        >>> windows_indices(15360, 15360, 7680)  # 60s windows with 50% overlap at 256 Hz
+        [(0, 15360, 0), (7680, 23040, 1), ...]
+    """
+    out = []
+    w = 0
+    start = 0
+
+    while start + win <= n:
+        out.append((start, start + win, w))
+        start += hop
+        w += 1
+
+    return out
+
+
+def extract_windowed_hrv_features(
+    signals: pd.DataFrame,
+    rpeaks: dict,
+    window_seconds: int = None,
+    overlap: float = None,
+    sr: int = None
+) -> pd.DataFrame:
+    """Extract HRV features from windowed ECG signal segments.
+
+    Applies sliding windows to ECG signals and computes HRV features
+    for each window.
+
+    Args:
+        signals: DataFrame with processed ECG signals (from processing_ecg_signal)
+        rpeaks: Dictionary with R-peak information (from processing_ecg_signal)
+        window_seconds: Window size in seconds (default: from config)
+        overlap: Window overlap fraction 0-1 (default: from config)
+        sr: Sampling rate in Hz (default: from config)
+
+    Returns:
+        DataFrame with one row per window containing:
+        - window_index: Window number
+        - t_start_sec: Start time in seconds
+        - t_end_sec: End time in seconds
+        - All HRV features (time, frequency, non-linear domains)
+
+    Example:
+        For 60-second windows with 50% overlap on 300-second signal:
+        - Window 0: 0-60s
+        - Window 1: 30-90s
+        - Window 2: 60-120s
+        - etc.
+    """
+    # Use config defaults if not specified
+    if sr is None:
+        sr = CFG.SAMPLE_RATE
+    if window_seconds is None:
+        window_seconds = CFG.WINDOW_SECONDS
+    if overlap is None:
+        overlap = CFG.WINDOW_OVERLAP
+
+    # Calculate window parameters in samples
+    win_samples = int(window_seconds * sr)
+    hop_samples = int(win_samples * (1 - overlap))
+
+    # Generate window indices
+    n_samples = len(signals)
+    windows = windows_indices(n_samples, win_samples, hop_samples)
+
+    if len(windows) == 0:
+        print(f"Warning: Signal too short for windowing (need {win_samples} samples, have {n_samples})")
+        return pd.DataFrame()
+
+    # Get all R-peak locations
+    all_rpeaks = rpeaks.get('ECG_R_Peaks', [])
+    if len(all_rpeaks) == 0:
+        print("Warning: No R-peaks found in signal")
+        return pd.DataFrame()
+
+    # Extract features for each window
+    window_features = []
+
+    for start, end, widx in windows:
+        # Find R-peaks within this window
+        window_rpeaks = [r for r in all_rpeaks if start <= r < end]
+
+        # Need at least 5 R-peaks for meaningful HRV analysis
+        if len(window_rpeaks) < 5:
+            continue
+
+        # Convert to local indices (relative to window start)
+        window_rpeaks_local = [r - start for r in window_rpeaks]
+
+        try:
+            # Extract HRV features for this window
+            # Time domain
+            hrv_time = nk.hrv_time(window_rpeaks_local, sampling_rate=sr, show=False)
+
+            # Frequency domain
+            hrv_freq = nk.hrv_frequency(window_rpeaks_local, sampling_rate=sr, show=False)
+
+            # Non-linear domain
+            hrv_nonlinear = nk.hrv_nonlinear(window_rpeaks_local, sampling_rate=sr, show=False)
+
+            # Combine all features
+            features = pd.concat([hrv_time, hrv_freq, hrv_nonlinear], axis=1)
+
+            # Clean up object columns
+            for col in features.columns:
+                if features[col].dtype == object:
+                    features[col] = features[col].apply(remove_brackets)
+
+            # Drop all-NaN columns
+            features = features.dropna(axis=1, how='all')
+
+            # Add window metadata
+            features['window_index'] = widx
+            features['t_start_sec'] = start / sr
+            features['t_end_sec'] = end / sr
+
+            window_features.append(features)
+
+        except Exception as e:
+            print(f"Warning: HRV extraction failed for window {widx}: {e}")
+            continue
+
+    if len(window_features) == 0:
+        return pd.DataFrame()
+
+    # Combine all windows
+    result = pd.concat(window_features, ignore_index=True)
+
+    # Reorder columns: metadata first, then features
+    metadata_cols = ['window_index', 't_start_sec', 't_end_sec']
+    feature_cols = [c for c in result.columns if c not in metadata_cols]
+    result = result[metadata_cols + feature_cols]
+
+    return result

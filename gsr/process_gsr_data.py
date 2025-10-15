@@ -37,7 +37,7 @@ from utils.config import CFG
 from utils.gsr_utils import (
     import_shimmer_eda_data,
     processing_eda_signal,
-    eda_feature_extraction,
+    extract_windowed_eda_features,
     parse_gsr_filename,
     map_session_to_condition
 )
@@ -138,24 +138,24 @@ def process_single_file(
             signals['condition'] = condition
             signals.to_csv(signal_file, index=False)
 
-        # Extract EDA features (treating whole file as one continuous signal)
-        eda_features = eda_feature_extraction(
+        # Extract EDA features using 60-second windows with 50% overlap
+        eda_features = extract_windowed_eda_features(
             signals,
-            rpeaks,
-            sr=CFG.SAMPLE_RATE,
-            save_output_folder=''  # Don't save intermediate outputs
+            window_seconds=CFG.WINDOW_SECONDS,
+            overlap=CFG.WINDOW_OVERLAP,
+            sr=CFG.SAMPLE_RATE
         )
 
         # Check if feature extraction succeeded
         if eda_features.empty:
             return {
                 'status': 'error',
-                'error': 'EDA feature extraction failed',
+                'error': 'EDA feature extraction failed (signal may be too short)',
                 'filename': filename,
                 'participant': participant_id
             }
 
-        # Add metadata to features
+        # Add metadata to features (participant, condition, filename)
         eda_features['participant'] = participant_id
         eda_features['condition'] = condition
         eda_features['filename'] = filename
@@ -170,6 +170,7 @@ def process_single_file(
             'condition': condition,
             'filename': filename,
             'samples': len(signals),
+            'windows': len(eda_features),
             'features': len(eda_features.columns)
         }
 
@@ -314,7 +315,9 @@ def run_gsr_pipeline(overwrite: bool = False):
                 'sample_rate': CFG.SAMPLE_RATE,
                 'cleaning_method': CFG.CLEANING_METHOD,
                 'phasic_method': CFG.PHASIC_METHOD,
-                'peak_method': CFG.PEAK_METHOD
+                'peak_method': CFG.PEAK_METHOD,
+                'window_seconds': CFG.WINDOW_SECONDS,
+                'window_overlap': CFG.WINDOW_OVERLAP
             },
             'files_processed': len(successful),
             'files_skipped': len(skipped),

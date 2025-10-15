@@ -11,11 +11,12 @@ This pipeline processes raw Zephyr ECG CSV files through the following steps:
 3. **Detect R-peaks** - Identify heartbeat peaks using configurable algorithms
 4. **Correct artifacts** - Apply Kubios method to fix ectopic beats and artifacts
 5. **Calculate heart rate** - Interpolate HR between R-peaks using spline methods
-6. **Extract HRV features** - Compute time, frequency, and non-linear domain metrics
+6. **Apply windowing** - Segment signals into 60-second windows with 50% overlap
+7. **Extract HRV features** - Compute time, frequency, and non-linear domain metrics per window
 
 The pipeline integrates with the pose pipeline's condition mapping system and produces output compatible with random forest modeling.
 
-**Output**: Cleaned ECG signals, R-peak locations, heart rate time series, and comprehensive HRV features with participant and condition labels.
+**Output**: Cleaned ECG signals, R-peak locations, heart rate time series, and windowed HRV features with participant and condition labels (~15 windows per 480-second session).
 
 ## Directory Structure
 
@@ -212,6 +213,10 @@ QUALITY_APPROACH = "fuzzy"
 # Options: 'linear', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic',
 #          'previous', 'next', 'monotone_cubic'
 INTERPOLATION_METHOD = "monotone_cubic"
+
+# Windowing parameters (for windowed HRV feature extraction)
+WINDOW_SECONDS = 60                 # Window duration in seconds
+WINDOW_OVERLAP = 0.5                # Window overlap fraction (0.5 = 50% overlap)
 ```
 
 ### Processing Flags
@@ -310,9 +315,33 @@ Reads Zephyr ECG and summary CSV files and performs validation:
 
 **Output**: Heart rate time series aligned with ECG signal
 
-### Step 7: Extract HRV Features
+### Step 6: Apply Windowing
 
-**Function**: `nk.hrv(rpeaks, sampling_rate)`
+**Function**: `extract_windowed_hrv_features(signals, rpeaks, window_seconds, overlap, sr)`
+
+**Windowing approach**:
+- Segments signals into **60-second windows** with **50% overlap**
+- Window size: 60 seconds = 15,000 samples (at 250 Hz)
+- Step size: 30 seconds (50% overlap) = 7,500 samples
+- Example: For 480-second session → 15 overlapping windows
+
+**Per-window processing**:
+- Extracts R-peaks within each window
+- Requires minimum 5 R-peaks per window for valid HRV analysis
+- Converts R-peak indices to window-local coordinates
+- Computes HRV features independently for each window
+
+**Rationale**: 60-second windows provide:
+- Adequate data for time-domain HRV metrics
+- Sufficient resolution for basic frequency analysis (though limited for VLF)
+- Temporal tracking of HRV dynamics during task
+- Consistency with pose and eye tracking feature extraction
+
+**Output**: DataFrame with window metadata (window_index, t_start_sec, t_end_sec) plus HRV features
+
+### Step 7: Extract HRV Features Per Window
+
+**Function**: `nk.hrv_time()`, `nk.hrv_frequency()`, `nk.hrv_nonlinear()`
 
 **HRV feature domains**:
 
@@ -428,14 +457,25 @@ Contains sample-by-sample processed ECG data (if `SAVE_SIGNALS=True`):
 
 ### Features Data (`features/<pid>_<cond>_ecg_features.csv`)
 
-Contains HRV features computed from entire session:
+Contains windowed HRV features computed from 60-second overlapping windows:
 
 **Columns**: ~60 HRV features plus:
+- `window_index`: Window number (0, 1, 2, ...)
+- `t_start_sec`: Window start time in seconds
+- `t_end_sec`: Window end time in seconds
 - `participant`: Participant ID
 - `condition`: Condition code (L, M, H)
 - `filename`: Original ECG filename
 
-**Format**: One row per file (session), compatible with pose pipeline for random forest modeling
+**Format**: Multiple rows per file (typically ~15 windows for 480-second session), compatible with pose and eye tracking pipelines for random forest modeling
+
+**Example**:
+```
+window_index,t_start_sec,t_end_sec,HRV_MeanNN,HRV_SDNN,...,participant,condition,filename
+0,0.0,60.0,577.62,11.57,...,3105,L,3105_ecg_session01.csv
+1,30.0,90.0,580.45,12.23,...,3105,L,3105_ecg_session01.csv
+2,60.0,120.0,582.11,13.01,...,3105,L,3105_ecg_session01.csv
+```
 
 ### Combined Data (`combined/ecg_features_all.csv`)
 
@@ -524,12 +564,15 @@ pip install numpy pandas neurokit2 python-dotenv jupyter
 ## Notes
 
 - ECG data is processed at the original sampling rate (250 Hz)
-- HRV features are computed from the entire session (no windowing by default)
-- Frequency domain features require at least 2-5 minutes of clean data
+- HRV features are computed from 60-second windows with 50% overlap (30-second step)
+- Each 480-second session generates approximately 15 windowed feature records
+- Time-domain features work well with 60-second windows
+- Frequency-domain features are limited by window duration (VLF analysis requires longer windows)
+- Non-linear features (e.g., DFA_alpha2) may not be calculable for short windows and will be omitted
 - R-peak correction (Kubios method) is essential for accurate HRV metrics
 - Missing or ectopic beats are automatically corrected in feature extraction
-- Output files are compatible with random forest modeling pipeline used for pose data
-- For windowed HRV analysis, modify `ecg_feature_extraction()` to process overlapping segments
+- Windowed format ensures consistency with pose and eye tracking pipelines for multimodal analysis
+- Output files are compatible with random forest modeling pipeline used across all modalities
 
 ## References
 

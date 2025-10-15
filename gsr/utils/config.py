@@ -64,7 +64,7 @@ class Config:
     PEAK_METHOD: str = "neurokit"
 
     # === Window Parameters ===
-    # (for windowed analysis - optional)
+    # Window size and overlap for windowed EDA feature extraction
     WINDOW_SECONDS: int = 60
     WINDOW_OVERLAP: float = 0.5
 

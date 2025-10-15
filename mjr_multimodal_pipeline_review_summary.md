@@ -230,6 +230,64 @@ Combines all modalities with columns:
 
 ---
 
+## Data Splitting and Session Duration Verification
+
+### Session Duration Configuration
+
+All ECG and GSR pipelines use a standardized session duration:
+- **SESSION_DURATION**: 480 seconds (8 minutes)
+- **Splitting Logic**:
+  1. Extract END time from MATB session log
+  2. Calculate start time: END - 480 seconds
+  3. Extract data window between start and END
+  4. Save as individual session file
+
+### Data Splitting Implementation
+
+**ECG Pipeline** (`split_ecg_data.py`):
+```python
+SESSION_DURATION = timedelta(minutes=8)  # 480 seconds
+```
+
+**GSR Pipeline** (`split_shimmer_data.py`):
+```python
+SESSION_DURATION = timedelta(minutes=8)  # 480 seconds
+```
+
+### Verification Results
+
+**ECG Sessions**:
+- ✅ All 112 processed sessions are exactly **480 seconds**
+- No sessions exceed the 480-second limit
+- 8 files failed processing due to insufficient raw data (< 480 seconds available)
+
+**GSR Sessions**:
+- ✅ 117 sessions are exactly **480 seconds**
+- ✅ 3 sessions are **shorter** (< 480 seconds due to insufficient raw data collection)
+- No sessions exceed the 480-second limit
+- 100% success rate (120/120 files processed)
+
+### Key Finding
+
+**Initial Concern**: User questioned why some windowed features appeared to exceed 480 seconds
+
+**Resolution**: Verified that NO session files exceed 480 seconds. All files are either:
+- Exactly 480 seconds (vast majority)
+- Shorter than 480 seconds (only when raw data collection ended early)
+
+The splitting logic correctly enforces the session duration limit, ensuring consistent window sizes for downstream feature extraction.
+
+### Impact on Windowed Features
+
+With 60-second windows and 50% overlap:
+- **Expected windows per session**: ~15 windows
+- **ECG**: 1,681 windowed records / 112 sessions ≈ 15 windows/session ✅
+- **GSR**: 1,782 windowed records / 120 sessions ≈ 14.85 windows/session ✅
+
+This confirms that windowing is working correctly across both pipelines.
+
+---
+
 ## Dependency Requirements
 
 ### All Pipelines

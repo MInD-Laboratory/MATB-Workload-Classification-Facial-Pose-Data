@@ -10,11 +10,12 @@ This pipeline processes raw Shimmer GSR CSV files through the following steps:
 2. **Clean signal** - Remove noise and smooth the EDA signal
 3. **Decompose** - Separate into phasic (SCR) and tonic (SCL) components
 4. **Detect SCR peaks** - Identify skin conductance responses
-5. **Extract features** - Compute interval-related EDA metrics
+5. **Apply windowing** - Segment signals into 60-second overlapping windows
+6. **Extract features** - Compute interval-related EDA metrics for each window
 
 The pipeline integrates with the pose pipeline's condition mapping system and produces output compatible with random forest modeling.
 
-**Output**: Cleaned EDA signals, SCR/SCL components, peak locations, and comprehensive EDA features with participant and condition labels.
+**Output**: Cleaned EDA signals, SCR/SCL components, peak locations, and comprehensive EDA features with participant and condition labels. Features are computed on 60-second windows with 50% overlap to capture temporal dynamics and enable multimodal fusion with pose/ECG/eye tracking data.
 
 ## Directory Structure
 
@@ -188,7 +189,7 @@ PHASIC_METHOD = "highpass"
 # Options: 'neurokit', 'gamboa2008', 'kim2004', 'vanhalem2020', 'nabian2018'
 PEAK_METHOD = "neurokit"
 
-# Window parameters (for optional windowed analysis)
+# Window parameters (for windowed feature extraction)
 WINDOW_SECONDS = 60                 # Window size in seconds
 WINDOW_OVERLAP = 0.5                # Window overlap fraction (0.5 = 50%)
 ```
@@ -263,9 +264,27 @@ Reads Shimmer GSR CSV file and performs validation:
 - Peak indices
 - Peak characteristics (amplitude, rise time, etc.)
 
-### Step 5: Extract EDA Features
+### Step 5: Apply Windowing
+
+**Function**: `extract_windowed_eda_features(signals, window_seconds, overlap, sr)`
+
+**Windowing approach**:
+- Segments signals into **60-second windows** with **50% overlap**
+- Creates sliding windows across entire session
+- Example for 500-second session: produces ~15 windows
+
+**Window metadata** (added to each feature row):
+- `window_index`: Window number (0, 1, 2, ...)
+- `t_start_sec`: Start time in seconds
+- `t_end_sec`: End time in seconds
+
+**Purpose**: Enables temporal resolution for within-session dynamics and multimodal fusion with pose/ECG/eye tracking
+
+### Step 6: Extract EDA Features
 
 **Function**: `nk.eda_intervalrelated(epochs, sampling_rate)`
+
+Features computed **per window** (not per session):
 
 **Interval-related features** (> 10 seconds):
 
@@ -277,15 +296,15 @@ Reads Shimmer GSR CSV file and performs validation:
 - **EDA_Tonic_SD**: Standard deviation of tonic component
 
 **Sympathetic Activity**:
-- **EDA_Sympathetic**: Sympathetic activity index (requires > 64s)
+- **EDA_Sympathetic**: Sympathetic activity index (requires > 64s - may be NaN for some windows)
 - **EDA_SympatheticN**: Normalized sympathetic activity
 
 **Signal Characteristics**:
 - **EDA_Autocorrelation**: Signal autocorrelation (requires > 30s)
 
-**Total**: 6 EDA features extracted per session
+**Total**: 4 EDA features extracted per window (Sympathetic features may be NaN)
 
-**Output**: Single-row DataFrame with all EDA features
+**Output**: Multi-row DataFrame with one row per window, containing all EDA features plus window metadata
 
 ## Feature Descriptions
 
@@ -364,41 +383,63 @@ Contains sample-by-sample processed EDA data (if `SAVE_SIGNALS=True`):
 
 ### Features Data (`features/<pid>_<cond>_gsr_features.csv`)
 
-Contains EDA features computed from entire session:
+Contains EDA features computed from windowed segments:
 
-**Columns**: 6 EDA features plus:
+**Columns**: Window metadata + 4 EDA features + identifiers:
+- `window_index`: Window number (0, 1, 2, ...)
+- `t_start_sec`: Window start time in seconds
+- `t_end_sec`: Window end time in seconds
+- `SCR_Peaks_N`: Number of SCR peaks in window
+- `SCR_Peaks_Amplitude_Mean`: Mean SCR amplitude in window
+- `EDA_Tonic_SD`: Tonic component variability in window
+- `EDA_Autocorrelation`: Signal autocorrelation in window
 - `participant`: Participant ID
 - `condition`: Condition code (L, M, H)
 - `filename`: Original GSR filename
 
-**Format**: One row per file (session), compatible with pose/ECG pipelines for random forest modeling
+**Format**: Multiple rows per file (~15 windows for typical 8-minute session), compatible with pose/ECG/eye tracking pipelines for multimodal modeling
+
+**Example**: For participant 3208 in condition L with 500-second session → ~15 rows with window_index 0-14
 
 ### Combined Data (`combined/gsr_features_all.csv`)
 
 Concatenation of all individual feature files:
-- Sorted by participant and condition
-- Includes data from all participants and conditions
+- Contains windowed features from all participants and conditions
+- Typical dataset: 120 files × ~15 windows/file ≈ 1,800 records
+- Sorted by participant, condition, and window
 - Ready for statistical analysis and machine learning
 - Compatible with mixed effects models (see `gsr_analysis.ipynb`)
+- Aligned with pose/ECG/eye tracking pipelines (same 60s windows) for multimodal fusion
 
 ## Integration with Pose/ECG/Eye Tracking Pipelines
 
-The GSR pipeline integrates with other pipelines for consistent data organization:
+The GSR pipeline integrates with other pipelines for consistent data organization and multimodal fusion:
 
 **Shared resources**:
 - Uses pose's `participant_info.csv` for condition mapping
 - Imports `create_condition_mapping()` from pose utilities
 - Imports `load_participant_info_file()` for participant data
 
+**Consistent windowing**:
+- **60-second windows** with **50% overlap** (same as pose/ECG/eye tracking)
+- `window_index`, `t_start_sec`, `t_end_sec` columns for temporal alignment
+- Enables direct merging of features across modalities
+
 **Consistent output format**:
 - Same filename convention: `<pid>_<cond>_<type>.csv`
 - Same condition codes: L, M, H
 - Compatible CSV structure for combined modeling
+- Window metadata for temporal alignment
 
 **Session-to-condition mapping**:
 1. Parse session number from filename (session01 → 1)
 2. Look up condition in participant_info.csv (participant 3208, session01 → L)
 3. Use condition code in output filenames (3208_L_gsr_features.csv)
+
+**Multimodal fusion workflow**:
+1. Extract features from all modalities (pose, eye, ECG, GSR)
+2. Merge on `(participant, condition, window_index)` for aligned windows
+3. Use combined features for machine learning or statistical analysis
 
 ## Analysis Workflow
 
@@ -460,12 +501,13 @@ pip install numpy pandas neurokit2 python-dotenv jupyter
 ## Notes
 
 - GSR data is processed at the original sampling rate (20 Hz)
-- EDA features are computed from the entire session (no windowing by default)
-- Sympathetic activity features require at least ~64 seconds of clean data
-- Autocorrelation features require at least ~30 seconds of data
+- **EDA features are computed using 60-second windows with 50% overlap** (consistent with pose/ECG/eye tracking)
+- Each window produces one feature row with 4 EDA metrics plus metadata
+- Sympathetic activity features may be NaN for individual windows (require > 64s for reliability)
+- Autocorrelation features require at least ~30 seconds of data (typically available in 60s windows)
 - SCR detection is performed on the phasic component only
-- Output files are compatible with random forest modeling pipeline used for pose/ECG/eye tracking data
-- For windowed EDA analysis, signals can be segmented in post-processing
+- Output files are compatible with random forest and mixed-effects modeling pipelines
+- Windowed features enable multimodal fusion and temporal workload analysis
 
 ## References
 

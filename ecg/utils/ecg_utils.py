@@ -530,4 +530,49 @@ def extract_windowed_hrv_features(
     feature_cols = [c for c in result.columns if c not in metadata_cols]
     result = result[metadata_cols + feature_cols]
 
+    # Clean inf/NaN values from features (preserve metadata)
+    result = clean_features(result, metadata_cols)
+
     return result
+
+
+def clean_features(df: pd.DataFrame, metadata_cols: list = None) -> pd.DataFrame:
+    """
+    Clean infinity and NaN values from feature DataFrame.
+
+    Replaces inf with NaN, then fills NaN with 0 for numeric feature columns only.
+    Preserves metadata columns unchanged.
+
+    Args:
+        df: DataFrame with features
+        metadata_cols: List of metadata column names to preserve (default: common metadata cols)
+
+    Returns:
+        Cleaned DataFrame
+    """
+    if df.empty:
+        return df
+
+    # Default metadata columns to preserve
+    if metadata_cols is None:
+        metadata_cols = ['window_index', 't_start_sec', 't_end_sec',
+                        'participant', 'condition', 'filename']
+
+    # Identify feature columns (numeric columns that aren't metadata)
+    feature_cols = [c for c in df.columns
+                    if c not in metadata_cols and np.issubdtype(df[c].dtype, np.number)]
+
+    if not feature_cols:
+        return df
+
+    # Count inf/nan before cleaning
+    inf_count = np.isinf(df[feature_cols].values).sum()
+    nan_count = np.isnan(df[feature_cols].values).sum()
+
+    if inf_count > 0 or nan_count > 0:
+        print(f"  Cleaning ECG features: {inf_count} inf, {nan_count} NaN values -> replacing with 0")
+
+        # Replace inf with NaN, then fill NaN with 0 (only for feature columns)
+        df[feature_cols] = df[feature_cols].replace([np.inf, -np.inf], np.nan).fillna(0)
+
+    return df

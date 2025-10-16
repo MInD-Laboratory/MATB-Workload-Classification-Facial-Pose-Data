@@ -473,7 +473,56 @@ def extract_eye_metrics(df, participant_id, condition,
             'sac_rate'       : len(Esac) / dur if dur > 0 else np.nan,
         })
         w_idx += 1
-    return pd.DataFrame(metrics)
+
+    metrics_df = pd.DataFrame(metrics)
+
+    # Clean inf/NaN values from features
+    if not metrics_df.empty:
+        metrics_df = clean_features(metrics_df)
+
+    return metrics_df
+
+
+def clean_features(df: pd.DataFrame, metadata_cols: list = None) -> pd.DataFrame:
+    """
+    Clean infinity and NaN values from feature DataFrame.
+
+    Replaces inf with NaN, then fills NaN with 0 for numeric feature columns only.
+    Preserves metadata columns unchanged.
+
+    Args:
+        df: DataFrame with features
+        metadata_cols: List of metadata column names to preserve (default: common metadata cols)
+
+    Returns:
+        Cleaned DataFrame
+    """
+    if df.empty:
+        return df
+
+    # Default metadata columns to preserve
+    if metadata_cols is None:
+        metadata_cols = ['participant', 'condition', 'window_index',
+                        'start_time', 'end_time', 'filename']
+
+    # Identify feature columns (numeric columns that aren't metadata)
+    feature_cols = [c for c in df.columns
+                    if c not in metadata_cols and np.issubdtype(df[c].dtype, np.number)]
+
+    if not feature_cols:
+        return df
+
+    # Count inf/nan before cleaning
+    inf_count = np.isinf(df[feature_cols].values).sum()
+    nan_count = np.isnan(df[feature_cols].values).sum()
+
+    if inf_count > 0 or nan_count > 0:
+        print(f"  Cleaning eye-tracking features: {inf_count} inf, {nan_count} NaN values -> replacing with 0")
+
+        # Replace inf with NaN, then fill NaN with 0 (only for feature columns)
+        df[feature_cols] = df[feature_cols].replace([np.inf, -np.inf], np.nan).fillna(0)
+
+    return df
 
 def plot_data(original_df, filtered_df, columns, down_sample=10, sample_rate=1000, filename='data', dir='dir', save=False):
     """

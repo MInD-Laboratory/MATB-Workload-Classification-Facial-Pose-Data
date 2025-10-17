@@ -1,0 +1,72 @@
+{
+  "name": "eye",
+  "config": {
+    "n_seeds": 3,
+    "feature_selection": "none",
+    "use_pca": false,
+    "pca_variance": 0.95,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "use_pose_derivatives": false,
+    "use_time_features": false,
+    "class_config": "all",
+    "include_order": false,
+    "name": "eye",
+    "feature_groups": [
+      "eye_tracking"
+    ],
+    "split_strategy": "random"
+  },
+  "metrics": {
+    "test_acc_mean": 0.6426666666666666,
+    "test_acc_std": 0.016220700080795236,
+    "test_bal_acc_mean": 0.642704109140829,
+    "test_bal_acc_std": 0.016131117596907642,
+    "test_f1_mean": 0.6427308626628382,
+    "test_f1_std": 0.016327972919829806,
+    "test_kappa_mean": 0.46394048151005385,
+    "test_kappa_std": 0.024283420244776078,
+    "test_precision_L_mean": 0.6346367720984029,
+    "test_precision_L_std": 0.011344967673219845,
+    "test_recall_L_mean": 0.6395663956639567,
+    "test_recall_L_std": 0.020460255922142956,
+    "test_f1_L_mean": 0.6369017980636239,
+    "test_f1_L_std": 0.009633097410267178,
+    "test_precision_M_mean": 0.6740859024323592,
+    "test_precision_M_std": 0.0336118757273065,
+    "test_recall_M_mean": 0.656,
+    "test_recall_M_std": 0.03999999999999998,
+    "test_f1_M_mean": 0.664726133684005,
+    "test_f1_M_std": 0.03412826235320769,
+    "test_precision_H_mean": 0.6210681166322208,
+    "test_precision_H_std": 0.006142010402262317,
+    "test_recall_H_mean": 0.6325459317585301,
+    "test_recall_H_std": 0.016391070861938025,
+    "test_f1_H_mean": 0.6267274458758894,
+    "test_f1_H_std": 0.011191600011142685
+  },
+  "confusion_matrix": [
+    [
+      63.956639566395665,
+      15.718157181571813,
+      20.325203252032523
+    ],
+    [
+      15.199999999999998,
+      65.60000000000001,
+      19.2
+    ],
+    [
+      20.73490813648294,
+      16.01049868766404,
+      63.25459317585302
+    ]
+  ],
+  "selected_features": [],
+  "tuned_rf_params": {},
+  "n_features": 6,
+  "n_seeds": 3,
+  "timestamp": "2025-10-17T09:53:37.809327"
+}

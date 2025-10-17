@@ -146,7 +146,7 @@ python run_rf_participant_specific.py --overwrite
 
 **Role of Random Seeds**:
 
-The `n_seeds` parameter (default: 5) controls different aspects depending on the sampling strategy:
+The `n_seeds` parameter (default: 10) controls different aspects depending on the sampling strategy:
 
 - **stratified**: Random seeds control both:
   1. Which windows are randomly sampled for training/test (data selection)
@@ -227,7 +227,7 @@ RF_PARAMS = {
 
 ```python
 DEFAULT_MODEL_CONFIG = {
-    "n_seeds": 5,                     # Random seeds for reliability (5 for random/participant splits, 5 for participant-specific sampling)
+    "n_seeds": 10,                    # Random seeds for reliability (10 for all strategies)
     "feature_selection": "backward",  # Backward elimination using permutation importance
     "use_pca": False,                 # Apply PCA dimensionality reduction
     "pca_variance": 0.95,             # Variance to retain if using PCA
@@ -235,10 +235,10 @@ DEFAULT_MODEL_CONFIG = {
     "tune_hyperparameters": False,    # Run RandomizedSearchCV for hyperparameter tuning
     "tune_n_iter": 30,                # Number of tuning iterations
     "tune_cv_folds": 5,               # CV folds for tuning
-    "use_pose_derivatives": False,    # Include velocity/acceleration features from pose
+    "use_pose_derivatives": True,     # Include velocity/acceleration features from pose
     "use_time_features": False,       # Include temporal position features (normalized time within condition)
     "class_config": "all",            # Class configuration (see Class Configurations section)
-    "include_order": True,            # Include condition order (LMH vs LHM) as binary feature
+    "include_order": False,           # Include condition order (LMH vs LHM) as binary feature
 }
 ```
 
@@ -273,12 +273,12 @@ Each experiment produces a JSON file (e.g., `pose_perf.json`):
   "name": "pose_perf",
   "config": {
     "split_strategy": "random",
-    "n_seeds": 5,
+    "n_seeds": 10,
     "feature_selection": "backward",
-    "use_pose_derivatives": false,
+    "use_pose_derivatives": true,
     "use_time_features": false,
     "class_config": "all",
-    "include_order": true,
+    "include_order": false,
     ...
   },
   "metrics": {
@@ -295,7 +295,7 @@ Each experiment produces a JSON file (e.g., `pose_perf.json`):
   "confusion_matrix": [[...], [...], [...]],
   "selected_features": [...],
   "n_features": 97,
-  "n_seeds": 5,
+  "n_seeds": 10,
   "timestamp": "2025-10-17T10:30:00"
 }
 ```
@@ -313,7 +313,7 @@ JSON structure:
   "config": {
     "split_strategy": "participant_specific",
     "sampling_strategy": "temporal_stratified",
-    "n_seeds": 5,
+    "n_seeds": 10,
     ...
   },
   "results_by_size": {
@@ -343,24 +343,41 @@ Quick summary of all experiments (`experiment_log.csv`):
 
 ```csv
 experiment_name,split_strategy,n_features,n_seeds,test_bal_acc_mean,test_bal_acc_std,...
-pose,random,85,5,0.68,0.04,...
-performance,random,12,5,0.72,0.03,...
-pose_perf,random,97,5,0.75,0.03,...
+pose,random,85,10,0.68,0.04,...
+performance,random,12,10,0.72,0.03,...
+pose_perf,random,97,10,0.75,0.03,...
 ...
 ```
 
 ### LOPO Output
 
-LOPO experiments include per-participant results:
+LOPO experiments run each fold with multiple random seeds and include per-participant results with confidence intervals:
 
 ```json
 {
   "participant_results": [
-    {"participant": "3105", "test_bal_acc": 0.72, "test_f1": 0.70, ...},
-    {"participant": "3206", "test_bal_acc": 0.68, "test_f1": 0.66, ...},
+    {
+      "participant": "3105",
+      "n_seeds": 10,
+      "test_bal_acc_mean": 0.72,
+      "test_bal_acc_std": 0.03,
+      "test_f1_mean": 0.70,
+      "test_f1_std": 0.02,
+      ...
+    },
+    {
+      "participant": "3206",
+      "n_seeds": 10,
+      "test_bal_acc_mean": 0.68,
+      "test_bal_acc_std": 0.04,
+      "test_f1_mean": 0.66,
+      "test_f1_std": 0.03,
+      ...
+    },
     ...
   ],
   "n_participants": 49,
+  "n_seeds": 10,
   "metrics": {
     "test_bal_acc_mean": 0.70,
     "test_bal_acc_std": 0.08,
@@ -368,6 +385,8 @@ LOPO experiments include per-participant results:
   }
 }
 ```
+
+Each participant fold is evaluated with 10 different random seeds (RF initialization), and results are aggregated to provide mean and standard deviation. The overall metrics aggregate the participant-level means across all participants.
 
 ## Interpreting Results
 

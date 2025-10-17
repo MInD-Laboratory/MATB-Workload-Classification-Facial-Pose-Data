@@ -21,4 +21,4 @@ __pycache__
 */logs/*
 *.log
 .DS_Store
-*/model_output/*
+*/modeling/figures/*

@@ -1,0 +1,86 @@
+{
+  "name": "gsr_ecg",
+  "config": {
+    "n_seeds": 10,
+    "feature_selection": "backward",
+    "use_pca": false,
+    "pca_variance": 0.95,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "class_config": "all",
+    "include_order": false,
+    "name": "gsr_ecg",
+    "feature_groups": [
+      "gsr",
+      "ecg"
+    ],
+    "split_strategy": "participant"
+  },
+  "metrics": {
+    "test_acc_mean": 0.3966769073220686,
+    "test_acc_std": 0.03918316280860155,
+    "test_bal_acc_mean": 0.3967407407407407,
+    "test_bal_acc_std": 0.037601513020772304,
+    "test_f1_mean": 0.38988020858309563,
+    "test_f1_std": 0.04110847520609446,
+    "test_kappa_mean": 0.09509128581161007,
+    "test_kappa_std": 0.05755759317539445,
+    "test_precision_L_mean": 0.41624549654240256,
+    "test_precision_L_std": 0.06344717517151213,
+    "test_recall_L_mean": 0.4457142857142856,
+    "test_recall_L_std": 0.10166957208302364,
+    "test_f1_L_mean": 0.41711436153947395,
+    "test_f1_L_std": 0.04239682309168732,
+    "test_precision_M_mean": 0.4067446478141578,
+    "test_precision_M_std": 0.06450999617366486,
+    "test_recall_M_mean": 0.37555555555555553,
+    "test_recall_M_std": 0.14647047048275633,
+    "test_f1_M_mean": 0.37954141497994903,
+    "test_f1_M_std": 0.09252570284365888,
+    "test_precision_H_mean": 0.3775710233064575,
+    "test_precision_H_std": 0.06771143051418471,
+    "test_recall_H_mean": 0.3689523809523809,
+    "test_recall_H_std": 0.09920236182462985,
+    "test_f1_H_mean": 0.3714346745088049,
+    "test_f1_H_std": 0.08006101440990382
+  },
+  "confusion_matrix": [
+    [
+      44.57142857142857,
+      22.547619047619047,
+      32.88095238095238
+    ],
+    [
+      32.03174603174603,
+      37.55555555555556,
+      30.41269841269841
+    ],
+    [
+      32.0,
+      31.104761904761904,
+      36.8952380952381
+    ]
+  ],
+  "selected_features": [
+    "SCR_Peaks_N",
+    "SCR_Peaks_Amplitude_Mean",
+    "EDA_Tonic_SD",
+    "HRV_MeanNN",
+    "HRV_Prc80NN",
+    "HRV_pNN50",
+    "HRV_pNN20",
+    "HRV_MinNN",
+    "HRV_MaxNN",
+    "HRV_VHF",
+    "HRV_PAS",
+    "HRV_C2a"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 12,
+  "n_seeds": 10,
+  "timestamp": "2025-10-17T15:38:24.752668"
+}

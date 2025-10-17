@@ -1,0 +1,89 @@
+{
+  "name": "ecg",
+  "config": {
+    "n_seeds": 10,
+    "feature_selection": "backward",
+    "use_pca": false,
+    "pca_variance": 0.95,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "class_config": "all",
+    "include_order": false,
+    "name": "ecg",
+    "feature_groups": [
+      "ecg"
+    ],
+    "split_strategy": "participant"
+  },
+  "metrics": {
+    "test_acc_mean": 0.3680627152136183,
+    "test_acc_std": 0.031176581240107977,
+    "test_bal_acc_mean": 0.3677289377289378,
+    "test_bal_acc_std": 0.03125848770147108,
+    "test_f1_mean": 0.35542746262160235,
+    "test_f1_std": 0.0355029929931765,
+    "test_kappa_mean": 0.05127160354037302,
+    "test_kappa_std": 0.047262227697008996,
+    "test_precision_L_mean": 0.3848774388878285,
+    "test_precision_L_std": 0.03632726909709848,
+    "test_recall_L_mean": 0.5044444444444445,
+    "test_recall_L_std": 0.13178278741863353,
+    "test_f1_L_mean": 0.43024144933705,
+    "test_f1_L_std": 0.08253729065572102,
+    "test_precision_M_mean": 0.3355476804337384,
+    "test_precision_M_std": 0.07437829876094434,
+    "test_recall_M_mean": 0.2741269841269841,
+    "test_recall_M_std": 0.1178197703202806,
+    "test_f1_M_mean": 0.2960497644013479,
+    "test_f1_M_std": 0.09238670484892147,
+    "test_precision_H_mean": 0.3605214511898285,
+    "test_precision_H_std": 0.0357077177077059,
+    "test_recall_H_mean": 0.32461538461538464,
+    "test_recall_H_std": 0.06105440765967403,
+    "test_f1_H_mean": 0.33882036903371743,
+    "test_f1_H_std": 0.04007631374028508
+  },
+  "confusion_matrix": [
+    [
+      50.44444444444444,
+      21.58730158730159,
+      27.96825396825397
+    ],
+    [
+      40.238095238095234,
+      27.41269841269841,
+      32.34920634920634
+    ],
+    [
+      38.117216117216124,
+      29.42124542124542,
+      32.46153846153847
+    ]
+  ],
+  "selected_features": [
+    "HRV_Prc20NN",
+    "HRV_pNN50",
+    "HRV_pNN20",
+    "HRV_MinNN",
+    "HRV_VHF",
+    "HRV_CVI",
+    "HRV_IALS",
+    "HRV_PSS",
+    "HRV_PAS",
+    "HRV_C2a",
+    "HRV_Ca",
+    "HRV_DFA_alpha1",
+    "HRV_MFDFA_alpha1_Width",
+    "HRV_ShanEn",
+    "HRV_CD",
+    "HRV_LZC"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 16,
+  "n_seeds": 10,
+  "timestamp": "2025-10-17T15:22:21.828420"
+}

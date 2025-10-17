@@ -1280,7 +1280,7 @@ def run_single_model(name, config, output_dir, force=False, resume=False):
         print(f"  Selected {len(selected_features)}/{len(X_train.columns)} features (score: {score:.4f})")
 
     # Evaluate across multiple seeds with the fixed feature subset
-    n_seeds = config.get("n_seeds", 20)
+    n_seeds = config.get("n_seeds", 10)
     all_metrics = []
     all_cms = []
 
@@ -1400,6 +1400,10 @@ def run_lopo_model(name, config, output_dir, force=False):
     participants = sorted(merged["participant"].unique())
     print(f"Participants: {len(participants)}")
 
+    # Get number of random seeds
+    n_seeds = config.get("n_seeds", 10)
+    print(f"Random seeds per fold: {n_seeds}")
+
     # -----------------------------
     # OPTIONAL FEATURE SELECTION (once, using first LOPO fold)
     # -----------------------------
@@ -1446,49 +1450,84 @@ def run_lopo_model(name, config, output_dir, force=False):
             X_train = X_train[selected_features]
             X_test = X_test[selected_features]
 
-        # Train RF model with scaling
-        rf = RandomForestClassifier(**RF_PARAMS, random_state=42)
-        scaler = StandardScaler()
+        # Run with multiple seeds for this participant fold
+        seed_metrics = []
+        seed_cms = []  # Store confusion matrices for each seed
+        for seed in range(n_seeds):
+            # Train RF model with scaling (different seed each time)
+            rf = RandomForestClassifier(**RF_PARAMS, random_state=seed)
+            scaler = StandardScaler()
 
-        X_train_scaled = scaler.fit_transform(X_train)
-        X_test_scaled = scaler.transform(X_test)
+            X_train_scaled = scaler.fit_transform(X_train)
+            X_test_scaled = scaler.transform(X_test)
 
-        rf.fit(X_train_scaled, y_train)
-        y_pred = rf.predict(X_test_scaled)
+            rf.fit(X_train_scaled, y_train)
+            y_pred = rf.predict(X_test_scaled)
 
-        # Compute metrics
-        metrics = {
+            # Compute metrics for this seed
+            metrics = {
+                "test_acc": accuracy_score(y_test, y_pred),
+                "test_bal_acc": balanced_accuracy_score(y_test, y_pred),
+                "test_f1": f1_score(y_test, y_pred, labels=class_labels, average="weighted"),
+                "test_kappa": cohen_kappa_score(y_test, y_pred, labels=class_labels),
+            }
+            seed_metrics.append(metrics)
+
+            # Compute confusion matrix for this seed (normalized as percentages)
+            cm = confusion_matrix(y_test, y_pred, labels=class_labels, normalize="true") * 100.0
+            seed_cms.append(cm)
+
+        # Aggregate across seeds for this participant
+        seed_df = pd.DataFrame(seed_metrics)
+
+        # Average confusion matrices across seeds
+        cm_avg = np.mean(np.stack(seed_cms, axis=0), axis=0)
+
+        participant_metrics = {
             "participant": participant,
-            "test_acc": accuracy_score(y_test, y_pred),
-            "test_bal_acc": balanced_accuracy_score(y_test, y_pred),
-            "test_f1": f1_score(y_test, y_pred, labels=class_labels, average="weighted"),
-            "test_kappa": cohen_kappa_score(y_test, y_pred, labels=class_labels),
+            "n_seeds": n_seeds,
+            "test_acc_mean": float(seed_df["test_acc"].mean()),
+            "test_acc_std": float(seed_df["test_acc"].std(ddof=1)) if n_seeds > 1 else 0.0,
+            "test_bal_acc_mean": float(seed_df["test_bal_acc"].mean()),
+            "test_bal_acc_std": float(seed_df["test_bal_acc"].std(ddof=1)) if n_seeds > 1 else 0.0,
+            "test_f1_mean": float(seed_df["test_f1"].mean()),
+            "test_f1_std": float(seed_df["test_f1"].std(ddof=1)) if n_seeds > 1 else 0.0,
+            "test_kappa_mean": float(seed_df["test_kappa"].mean()),
+            "test_kappa_std": float(seed_df["test_kappa"].std(ddof=1)) if n_seeds > 1 else 0.0,
+            "confusion_matrix": cm_avg.tolist(),  # Add per-participant confusion matrix
         }
 
-        participant_results.append(metrics)
+        participant_results.append(participant_metrics)
 
     # Aggregate across all participants
     results_df = pd.DataFrame(participant_results)
 
+    # Aggregate participant-level means across all participants
     aggregated_metrics = {
-        "test_acc_mean": float(results_df["test_acc"].mean()),
-        "test_acc_std": float(results_df["test_acc"].std(ddof=1)),
-        "test_bal_acc_mean": float(results_df["test_bal_acc"].mean()),
-        "test_bal_acc_std": float(results_df["test_bal_acc"].std(ddof=1)),
-        "test_f1_mean": float(results_df["test_f1"].mean()),
-        "test_f1_std": float(results_df["test_f1"].std(ddof=1)),
-        "test_kappa_mean": float(results_df["test_kappa"].mean()),
-        "test_kappa_std": float(results_df["test_kappa"].std(ddof=1)),
+        "test_acc_mean": float(results_df["test_acc_mean"].mean()),
+        "test_acc_std": float(results_df["test_acc_mean"].std(ddof=1)),
+        "test_bal_acc_mean": float(results_df["test_bal_acc_mean"].mean()),
+        "test_bal_acc_std": float(results_df["test_bal_acc_mean"].std(ddof=1)),
+        "test_f1_mean": float(results_df["test_f1_mean"].mean()),
+        "test_f1_std": float(results_df["test_f1_mean"].std(ddof=1)),
+        "test_kappa_mean": float(results_df["test_kappa_mean"].mean()),
+        "test_kappa_std": float(results_df["test_kappa_mean"].std(ddof=1)),
     }
+
+    # Aggregate confusion matrices across all participants
+    all_participant_cms = [p["confusion_matrix"] for p in participant_results]
+    overall_cm = np.mean(all_participant_cms, axis=0)
 
     # Persist results
     results = {
         "name": name,
         "config": {k: v for k, v in config.items() if k != "files"},
         "metrics": aggregated_metrics,
+        "confusion_matrix": overall_cm.tolist(),
         "participant_results": participant_results,
         "selected_features": selected_features if selected_features else [],
         "n_participants": len(participants),
+        "n_seeds": n_seeds,
         "n_features": len(selected_features) if selected_features else len(X_train.columns),
         "timestamp": datetime.now().isoformat(),
     }
@@ -1635,7 +1674,7 @@ def run_participant_specific_model(name, config, output_dir, training_sizes, sam
     print(f"Training sizes: {training_sizes}")
 
     # Get number of random seeds to use
-    n_seeds = config.get("n_seeds", 5)
+    n_seeds = config.get("n_seeds", 10)
     print(f"Random seeds per participant: {n_seeds}")
 
     # Choose sampling function based on strategy
@@ -1724,6 +1763,7 @@ def run_participant_specific_model(name, config, output_dir, training_sizes, sam
 
             # Store results across seeds for this participant
             seed_results = []
+            seed_cms = []  # Store confusion matrices for each seed
 
             # Run multiple random seeds for this participant
             for seed in range(n_seeds):
@@ -1783,10 +1823,21 @@ def run_participant_specific_model(name, config, output_dir, training_sizes, sam
 
                 seed_results.append(metrics)
 
+                # Compute confusion matrix for this seed (normalized as percentages)
+                cm = confusion_matrix(y_test, y_pred, labels=class_labels, normalize="true") * 100.0
+                seed_cms.append(cm)
+
             # Aggregate across seeds for this participant
             if seed_results:
                 # Convert to dataframe for easy aggregation
                 seed_df = pd.DataFrame(seed_results)
+
+                # Average confusion matrices across seeds
+                if seed_cms:
+                    cm_avg = np.mean(np.stack(seed_cms, axis=0), axis=0)
+                else:
+                    # If no confusion matrices were collected, create a zero matrix
+                    cm_avg = np.zeros((len(class_labels), len(class_labels)))
 
                 # Compute mean and std across seeds
                 participant_metrics = {
@@ -1803,6 +1854,7 @@ def run_participant_specific_model(name, config, output_dir, training_sizes, sam
                     "test_f1_std": float(seed_df["test_f1"].std(ddof=1)) if len(seed_df) > 1 else 0.0,
                     "test_kappa_mean": float(seed_df["test_kappa"].mean()),
                     "test_kappa_std": float(seed_df["test_kappa"].std(ddof=1)) if len(seed_df) > 1 else 0.0,
+                    "confusion_matrix": cm_avg.tolist(),  # Add per-participant confusion matrix
                 }
 
                 participant_results.append(participant_metrics)
@@ -1810,6 +1862,10 @@ def run_participant_specific_model(name, config, output_dir, training_sizes, sam
         # Aggregate across participants for this training size
         if participant_results:
             results_df = pd.DataFrame(participant_results)
+
+            # Aggregate confusion matrices across all participants for this training size
+            all_participant_cms = [p["confusion_matrix"] for p in participant_results]
+            overall_cm = np.mean(all_participant_cms, axis=0)
 
             # Aggregate participant-level means (averaged over seeds) across all participants
             aggregated = {
@@ -1824,6 +1880,7 @@ def run_participant_specific_model(name, config, output_dir, training_sizes, sam
                 "test_f1_std": float(results_df["test_f1_mean"].std(ddof=1)) if len(results_df) > 1 else 0.0,
                 "test_kappa_mean": float(results_df["test_kappa_mean"].mean()),
                 "test_kappa_std": float(results_df["test_kappa_mean"].std(ddof=1)) if len(results_df) > 1 else 0.0,
+                "confusion_matrix": overall_cm.tolist(),  # Add aggregated confusion matrix
             }
 
             learning_curve_results.append({

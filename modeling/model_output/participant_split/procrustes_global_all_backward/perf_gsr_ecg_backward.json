@@ -1,0 +1,101 @@
+{
+  "name": "perf_gsr_ecg",
+  "config": {
+    "n_seeds": 10,
+    "feature_selection": "backward",
+    "use_pca": false,
+    "pca_variance": 0.95,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "class_config": "all",
+    "include_order": false,
+    "name": "perf_gsr_ecg",
+    "feature_groups": [
+      "performance",
+      "gsr",
+      "ecg"
+    ],
+    "split_strategy": "participant"
+  },
+  "metrics": {
+    "test_acc_mean": 0.7044891640866873,
+    "test_acc_std": 0.038981692518745614,
+    "test_bal_acc_mean": 0.7037797619047619,
+    "test_bal_acc_std": 0.03792604204606843,
+    "test_f1_mean": 0.7061465931716068,
+    "test_f1_std": 0.040580098798273345,
+    "test_kappa_mean": 0.556103464417299,
+    "test_kappa_std": 0.05784752079402081,
+    "test_precision_L_mean": 0.8476197497165643,
+    "test_precision_L_std": 0.131590478221065,
+    "test_recall_L_mean": 0.7400694444444446,
+    "test_recall_L_std": 0.0482993650329529,
+    "test_f1_L_mean": 0.7823929227019606,
+    "test_f1_L_std": 0.04861409441262044,
+    "test_precision_M_mean": 0.5971318313359157,
+    "test_precision_M_std": 0.05100595921460279,
+    "test_recall_M_mean": 0.6465079365079365,
+    "test_recall_M_std": 0.128302350871958,
+    "test_f1_M_mean": 0.613020677586489,
+    "test_f1_M_std": 0.06371205263134672,
+    "test_precision_H_mean": 0.7367968455290429,
+    "test_precision_H_std": 0.07585261817227021,
+    "test_recall_H_mean": 0.7247619047619047,
+    "test_recall_H_std": 0.11065211316848879,
+    "test_f1_H_mean": 0.722142561048799,
+    "test_f1_H_std": 0.04606252889249413
+  },
+  "confusion_matrix": [
+    [
+      74.00694444444446,
+      20.94345238095238,
+      5.049603174603176
+    ],
+    [
+      10.587301587301587,
+      64.65079365079366,
+      24.76190476190476
+    ],
+    [
+      5.0476190476190474,
+      22.476190476190474,
+      72.47619047619048
+    ]
+  ],
+  "selected_features": [
+    "sysmon_failure_rate",
+    "sysmon_average_reaction_times",
+    "comms_failure_rate",
+    "comms_events",
+    "comms_own_events",
+    "track_failure_rate",
+    "resman_failure_rate",
+    "average_accuracy",
+    "average_reaction_time",
+    "t_end_sec",
+    "SCR_Peaks_N",
+    "SCR_Peaks_Amplitude_Mean",
+    "EDA_Tonic_SD",
+    "HRV_MeanNN",
+    "HRV_MedianNN",
+    "HRV_Prc80NN",
+    "HRV_pNN20",
+    "HRV_HTI",
+    "HRV_VHF",
+    "HRV_CVI",
+    "HRV_CSI_Modified",
+    "HRV_SDNNa",
+    "HRV_MFDFA_alpha1_Mean",
+    "HRV_MFDFA_alpha1_Increment",
+    "HRV_CD",
+    "HRV_HFD"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 26,
+  "n_seeds": 10,
+  "timestamp": "2025-10-17T15:59:21.617494"
+}

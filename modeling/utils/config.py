@@ -80,18 +80,18 @@ RF_PARAMS = {
 # ============================================================================
 
 DEFAULT_MODEL_CONFIG = {
-    "n_seeds": 2,                     # Number of random seeds for reliability (random/participant splits and participant-specific sampling)
-    "feature_selection": "none",  # Options: "backward", "forward", None
+    "n_seeds": 10,                     # Number of random seeds for reliability (random/participant splits and participant-specific sampling)
+    "feature_selection": "backward",  # Options: "backward", "forward", None
     "use_pca": False,                 # Apply PCA after feature selection
     "pca_variance": 0.95,             # Variance to retain if using PCA
     "write_cm": True,                 # Save confusion matrices
     "tune_hyperparameters": False,    # Tune RF hyperparameters
     "tune_n_iter": 30,                # Number of tuning iterations
     "tune_cv_folds": 5,               # CV folds for tuning
-    "use_pose_derivatives": False,    # Include velocity/acceleration features from pose
+    "use_pose_derivatives": True,    # Include velocity/acceleration features from pose
     "use_time_features": False,       # Include temporal position features (normalized time)
     "class_config": "all",            # Class configuration: "all", "L_vs_H", "L_vs_M", "M_vs_H", "LM_vs_H", "L_vs_MH"
-    "include_order": True,            # Include condition order (LMH vs LHM) as feature
+    "include_order": False,            # Include condition order (LMH vs LHM) as feature
 }
 
 # ============================================================================

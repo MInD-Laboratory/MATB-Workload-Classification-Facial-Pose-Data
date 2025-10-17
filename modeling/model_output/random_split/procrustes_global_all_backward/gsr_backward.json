@@ -1,0 +1,78 @@
+{
+  "name": "gsr",
+  "config": {
+    "n_seeds": 10,
+    "feature_selection": "backward",
+    "use_pca": false,
+    "pca_variance": 0.95,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "class_config": "all",
+    "include_order": false,
+    "name": "gsr",
+    "feature_groups": [
+      "gsr"
+    ],
+    "split_strategy": "random"
+  },
+  "metrics": {
+    "test_acc_mean": 0.4322128851540617,
+    "test_acc_std": 0.02417020523579925,
+    "test_bal_acc_mean": 0.4325404342527972,
+    "test_bal_acc_std": 0.024145609695161444,
+    "test_f1_mean": 0.4299830277258082,
+    "test_f1_std": 0.02432874907813506,
+    "test_kappa_mean": 0.14850187340463974,
+    "test_kappa_std": 0.03629522381585871,
+    "test_precision_L_mean": 0.46751186001225536,
+    "test_precision_L_std": 0.015697851656473128,
+    "test_recall_L_mean": 0.5161016949152543,
+    "test_recall_L_std": 0.034237940737007214,
+    "test_f1_L_mean": 0.4897972952099298,
+    "test_f1_L_std": 0.015215456209528737,
+    "test_precision_M_mean": 0.4274204166763783,
+    "test_precision_M_std": 0.036487740261562845,
+    "test_recall_M_mean": 0.3991666666666667,
+    "test_recall_M_std": 0.048344507009842295,
+    "test_f1_M_mean": 0.41206413550076393,
+    "test_f1_M_std": 0.039470989643408616,
+    "test_precision_H_mean": 0.3984789407796261,
+    "test_precision_H_std": 0.0383786932987525,
+    "test_recall_H_mean": 0.38235294117647056,
+    "test_recall_H_std": 0.05605741203414426,
+    "test_f1_H_mean": 0.3887408722962198,
+    "test_f1_H_std": 0.04223994606448431
+  },
+  "confusion_matrix": [
+    [
+      51.610169491525426,
+      22.711864406779664,
+      25.67796610169491
+    ],
+    [
+      27.916666666666664,
+      39.916666666666664,
+      32.166666666666664
+    ],
+    [
+      30.336134453781504,
+      31.428571428571427,
+      38.23529411764706
+    ]
+  ],
+  "selected_features": [
+    "t_end_sec",
+    "SCR_Peaks_N",
+    "SCR_Peaks_Amplitude_Mean",
+    "EDA_Tonic_SD",
+    "EDA_Autocorrelation"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 5,
+  "n_seeds": 10,
+  "timestamp": "2025-10-17T17:52:21.400467"
+}

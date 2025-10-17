@@ -96,7 +96,7 @@ def barplot_ax(ax, means, sems, pvals,
                ylabel, metric_name,
                colors=None,
                bar_width=0.80,
-               ylim_padding=(0.1, 0.1)):
+               ylim_padding=(0.1, 0.15)):
     """
     Draw a bar plot with error bars and significance brackets for three conditions.
     ax: matplotlib axis
@@ -124,9 +124,9 @@ def barplot_ax(ax, means, sems, pvals,
     pairs = [(0,1,pvals[0]), (0,2,pvals[1]), (1,2,pvals[2])]
     sig_pairs = [(i, j, p) for (i, j, p) in pairs if p < 0.05]
     sig_pairs = sorted(sig_pairs, key=lambda t: (t[1]-t[0]))
-    h_step = 0.2 * y_span
-    line_h = 0.03 * y_span
-    y0 = y_max + 0.04 * y_span
+    h_step = 0.1 * y_span
+    line_h = 0.025 * y_span
+    y0 = y_max + 0.025 * y_span
     for idx, (i, j, p) in enumerate(sig_pairs):
         y = y0 + idx * h_step
         ax.plot([x[i], x[i], x[j], x[j]],
@@ -135,18 +135,19 @@ def barplot_ax(ax, means, sems, pvals,
         stars = '***' if p < .001 else '**' if p < .01 else '*'
         ax.text((x[i]+x[j])/2, y+0.25*line_h, stars,
                 ha='center', va='bottom',
-                fontsize=13, fontweight='bold',
+                fontsize=10, fontweight='bold',
                 color='black', clip_on=False)
     ax.set_xlim(-0.5, len(means)-0.5)
     ax.set_xticks([])
     wrapped_ylabel = "\n".join(textwrap.wrap(ylabel, width=25))
-    ax.set_ylabel(wrapped_ylabel, weight='bold', fontsize=12)
+    ax.set_ylabel(wrapped_ylabel, fontsize=10)
     ax.set_ylim(y_min - ylim_padding[0]*y_span, y_max + ylim_padding[1]*y_span + len(sig_pairs)*h_step)
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.0f' if max(uppers) > 99 else '%.1f' if max(uppers) > 9 else '%.2f'))
     ax.spines[['top','right']].set_visible(False)
     for spine in ax.spines.values():
         spine.set_linewidth(1.4)
-    ax.tick_params(axis='y', width=1.3, labelsize=11)
+    ax.tick_params(axis='y', width=1.3, labelsize=10)
     for lab in ax.get_yticklabels():
         lab.set_fontweight('bold')
+        lab.set_fontsize(9)

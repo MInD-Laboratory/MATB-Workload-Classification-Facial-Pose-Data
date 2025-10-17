@@ -1,0 +1,96 @@
+{
+  "name": "eye_gsr_ecg",
+  "config": {
+    "n_seeds": 10,
+    "feature_selection": "backward",
+    "use_pca": false,
+    "pca_variance": 0.95,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "class_config": "all",
+    "include_order": false,
+    "name": "eye_gsr_ecg",
+    "feature_groups": [
+      "eye_tracking",
+      "gsr",
+      "ecg"
+    ],
+    "split_strategy": "participant"
+  },
+  "metrics": {
+    "test_acc_mean": 0.4084466442726747,
+    "test_acc_std": 0.040401543396497146,
+    "test_bal_acc_mean": 0.41120469805395016,
+    "test_bal_acc_std": 0.04183455714973086,
+    "test_f1_mean": 0.4000023886199939,
+    "test_f1_std": 0.045723501490201005,
+    "test_kappa_mean": 0.11495739162295808,
+    "test_kappa_std": 0.059497908108478895,
+    "test_precision_L_mean": 0.41120110429951834,
+    "test_precision_L_std": 0.07551397179190343,
+    "test_recall_L_mean": 0.47327161449154537,
+    "test_recall_L_std": 0.13935211385094212,
+    "test_f1_L_mean": 0.43144437950306785,
+    "test_f1_L_std": 0.08976008711859403,
+    "test_precision_M_mean": 0.3474029184496197,
+    "test_precision_M_std": 0.05758799868600502,
+    "test_recall_M_mean": 0.30536150072159357,
+    "test_recall_M_std": 0.13817486069416826,
+    "test_f1_M_mean": 0.309234781435586,
+    "test_f1_M_std": 0.08549093118667604,
+    "test_precision_H_mean": 0.4722957997167291,
+    "test_precision_H_std": 0.07109251770153548,
+    "test_recall_H_mean": 0.4549809789487117,
+    "test_recall_H_std": 0.0656192953568985,
+    "test_f1_H_mean": 0.4592642803607479,
+    "test_f1_H_std": 0.04933503303324783
+  },
+  "confusion_matrix": [
+    [
+      47.327161449154545,
+      31.46572614088018,
+      21.20711240996527
+    ],
+    [
+      33.48336749358789,
+      30.53615007215935,
+      35.98048243425274
+    ],
+    [
+      27.865772149038854,
+      26.63612995608998,
+      45.49809789487116
+    ]
+  ],
+  "selected_features": [
+    "pct_missing",
+    "mean_vel",
+    "max_vel",
+    "rms_disp",
+    "fix_mean_dur",
+    "fix_rate",
+    "blink_mean_dur",
+    "blink_rate",
+    "sac_rate",
+    "SCR_Peaks_N",
+    "SCR_Peaks_Amplitude_Mean",
+    "EDA_Tonic_SD",
+    "HRV_MeanNN",
+    "HRV_MedianNN",
+    "HRV_Prc80NN",
+    "HRV_pNN20",
+    "HRV_VHF",
+    "HRV_CVI",
+    "HRV_PSS",
+    "HRV_PAS",
+    "HRV_SampEn"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 21,
+  "n_seeds": 10,
+  "timestamp": "2025-10-17T16:01:14.422132"
+}

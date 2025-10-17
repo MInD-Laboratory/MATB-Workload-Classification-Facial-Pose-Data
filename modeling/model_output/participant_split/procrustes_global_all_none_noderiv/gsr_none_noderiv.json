@@ -1,0 +1,72 @@
+{
+  "name": "gsr",
+  "config": {
+    "n_seeds": 3,
+    "feature_selection": "none",
+    "use_pca": false,
+    "pca_variance": 0.95,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "use_pose_derivatives": false,
+    "use_time_features": false,
+    "class_config": "all",
+    "include_order": false,
+    "name": "gsr",
+    "feature_groups": [
+      "gsr"
+    ],
+    "split_strategy": "participant"
+  },
+  "metrics": {
+    "test_acc_mean": 0.3677350427350427,
+    "test_acc_std": 0.023466364144943005,
+    "test_bal_acc_mean": 0.3692442442442443,
+    "test_bal_acc_std": 0.021889287967279885,
+    "test_f1_mean": 0.3615223471091169,
+    "test_f1_std": 0.025992453016481575,
+    "test_kappa_mean": 0.05326668241336289,
+    "test_kappa_std": 0.0334321209105532,
+    "test_precision_L_mean": 0.4086246195264831,
+    "test_precision_L_std": 0.04354260836349353,
+    "test_recall_L_mean": 0.4716216216216216,
+    "test_recall_L_std": 0.0981648736743678,
+    "test_f1_L_mean": 0.4312685867116854,
+    "test_f1_L_std": 0.03609336610633049,
+    "test_precision_M_mean": 0.33559186511942424,
+    "test_precision_M_std": 0.028658190669540184,
+    "test_recall_M_mean": 0.2722222222222222,
+    "test_recall_M_std": 0.08753306253660408,
+    "test_f1_M_mean": 0.29671367094976475,
+    "test_f1_M_std": 0.06111398013381886,
+    "test_precision_H_mean": 0.3549090650753055,
+    "test_precision_H_std": 0.0347448880509674,
+    "test_recall_H_mean": 0.3638888888888889,
+    "test_recall_H_std": 0.017347216662217797,
+    "test_f1_H_mean": 0.3589058806146572,
+    "test_f1_H_std": 0.02373158070786316
+  },
+  "confusion_matrix": [
+    [
+      47.16216216216216,
+      24.15165165165165,
+      28.686186186186188
+    ],
+    [
+      34.166666666666664,
+      27.222222222222225,
+      38.611111111111114
+    ],
+    [
+      33.888888888888886,
+      29.722222222222225,
+      36.38888888888889
+    ]
+  ],
+  "selected_features": [],
+  "tuned_rf_params": {},
+  "n_features": -3,
+  "n_seeds": 3,
+  "timestamp": "2025-10-17T09:54:29.891688"
+}

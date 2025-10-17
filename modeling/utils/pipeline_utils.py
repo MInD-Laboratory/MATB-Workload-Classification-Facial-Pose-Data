@@ -121,6 +121,12 @@ def get_config_dirname(pose_variant, config):
     if config.get("use_time_features", False):
         parts.append("time")
 
+    # Optional: normalization - add suffix to distinguish from older runs
+    if config.get("normalize_features", True):
+        parts.append("zscore")
+    else:
+        parts.append("nonorm")
+
     # Optional: condition order
     if config.get("include_order", False):
         parts.append("order")
@@ -178,6 +184,12 @@ def get_config_suffix(config):
     if config.get("use_time_features", False):
         parts.append("time")
 
+    # Normalization - add suffix to distinguish from older runs
+    if config.get("normalize_features", True):
+        parts.append("zscore")
+    else:
+        parts.append("nonorm")
+
     # Condition order (only add suffix if enabled)
     if config.get("include_order", False):
         parts.append("order")
@@ -207,6 +219,7 @@ def save_run_settings(output_dir, pose_variant, config, split_strategy):
         "feature_selection": config.get("feature_selection", None),
         "use_pose_derivatives": config.get("use_pose_derivatives", True),
         "use_time_features": config.get("use_time_features", False),
+        "normalize_features": config.get("normalize_features", True),
         "include_order": config.get("include_order", False),
         "tune_hyperparameters": config.get("tune_hyperparameters", False),
         "use_pca": config.get("use_pca", False),
@@ -243,6 +256,7 @@ def find_matching_run(base_output_dir, pose_variant, config, split_strategy):
         "feature_selection": config.get("feature_selection", None),
         "use_pose_derivatives": config.get("use_pose_derivatives", True),
         "use_time_features": config.get("use_time_features", False),
+        "normalize_features": config.get("normalize_features", True),
         "include_order": config.get("include_order", False),
         "tune_hyperparameters": config.get("tune_hyperparameters", False),
         "use_pca": config.get("use_pca", False),
@@ -641,9 +655,9 @@ def drop_identifier_columns(df, use_pose_derivatives=True, use_time_features=Fal
 
     # Optional: drop pose velocity and acceleration features
     if not use_pose_derivatives:
-        derivative_cols = [c for c in df_clean.columns if c.endswith('_vel') or c.endswith('_acc')]
+        derivative_cols = [c for c in df_clean.columns if '_vel_' in c or '_acc_' in c]
         if derivative_cols:
-            # print(f"  Excluding {len(derivative_cols)} pose derivative features (vel/acc)")
+            print(f"  Excluding {len(derivative_cols)} pose derivative features (vel/acc)")
             df_clean = df_clean.drop(columns=derivative_cols, errors="ignore")
 
     # Replace inf values with NaN, then fill NaN with 0
@@ -1141,7 +1155,8 @@ def fit_and_evaluate(df, split_strategy, seed, config, labels, selected_features
     # Build pipeline components
     pipeline_steps = []
 
-    if config.get("use_scaler", True):
+    # Z-score normalization: fit on training data, apply to both train and test
+    if config.get("normalize_features", True):
         pipeline_steps.append(("scaler", StandardScaler()))
 
     if config.get("use_pca", False):
@@ -1454,12 +1469,17 @@ def run_lopo_model(name, config, output_dir, force=False):
         seed_metrics = []
         seed_cms = []  # Store confusion matrices for each seed
         for seed in range(n_seeds):
-            # Train RF model with scaling (different seed each time)
+            # Train RF model (different seed each time)
             rf = RandomForestClassifier(**RF_PARAMS, random_state=seed)
-            scaler = StandardScaler()
 
-            X_train_scaled = scaler.fit_transform(X_train)
-            X_test_scaled = scaler.transform(X_test)
+            # Z-score normalization: fit on training data, apply to both train and test
+            if config.get("normalize_features", True):
+                scaler = StandardScaler()
+                X_train_scaled = scaler.fit_transform(X_train)
+                X_test_scaled = scaler.transform(X_test)
+            else:
+                X_train_scaled = X_train.values if hasattr(X_train, 'values') else X_train
+                X_test_scaled = X_test.values if hasattr(X_test, 'values') else X_test
 
             rf.fit(X_train_scaled, y_train)
             y_pred = rf.predict(X_test_scaled)
@@ -1800,12 +1820,17 @@ def run_participant_specific_model(name, config, output_dir, training_sizes, sam
                     X_train = X_train[selected_features]
                     X_test = X_test[selected_features]
 
-                # Train RF model with scaling (use seed for RF too)
+                # Train RF model (use seed for RF too)
                 rf = RandomForestClassifier(**RF_PARAMS, random_state=seed)
-                scaler = StandardScaler()
 
-                X_train_scaled = scaler.fit_transform(X_train)
-                X_test_scaled = scaler.transform(X_test)
+                # Z-score normalization: fit on training data, apply to both train and test
+                if config.get("normalize_features", True):
+                    scaler = StandardScaler()
+                    X_train_scaled = scaler.fit_transform(X_train)
+                    X_test_scaled = scaler.transform(X_test)
+                else:
+                    X_train_scaled = X_train.values if hasattr(X_train, 'values') else X_train
+                    X_test_scaled = X_test.values if hasattr(X_test, 'values') else X_test
 
                 rf.fit(X_train_scaled, y_train)
                 y_pred = rf.predict(X_test_scaled)

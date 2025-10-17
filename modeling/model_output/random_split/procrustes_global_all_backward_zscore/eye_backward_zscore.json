@@ -1,0 +1,82 @@
+{
+  "name": "eye",
+  "config": {
+    "n_seeds": 20,
+    "feature_selection": "backward",
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "include_order": false,
+    "normalize_features": true,
+    "class_config": "all",
+    "use_pca": false,
+    "pca_variance": 0.9,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "name": "eye",
+    "feature_groups": [
+      "eye_tracking"
+    ],
+    "split_strategy": "random"
+  },
+  "metrics": {
+    "test_acc_mean": 0.6345333333333333,
+    "test_acc_std": 0.025803213907442155,
+    "test_bal_acc_mean": 0.6347246484433348,
+    "test_bal_acc_std": 0.0257982939678106,
+    "test_f1_mean": 0.6337414700621328,
+    "test_f1_std": 0.025599823202568844,
+    "test_kappa_mean": 0.45174912839399345,
+    "test_kappa_std": 0.038742427756170546,
+    "test_precision_L_mean": 0.6503881079901321,
+    "test_precision_L_std": 0.030130305677342806,
+    "test_recall_L_mean": 0.6764227642276424,
+    "test_recall_L_std": 0.044810650586697705,
+    "test_f1_L_mean": 0.6620553791340769,
+    "test_f1_L_std": 0.02565562474736482,
+    "test_precision_M_mean": 0.6424610480835012,
+    "test_precision_M_std": 0.03806666782918129,
+    "test_recall_M_mean": 0.5872000000000002,
+    "test_recall_M_std": 0.04816812660933193,
+    "test_f1_M_mean": 0.612487928795186,
+    "test_f1_M_std": 0.035330130764097294,
+    "test_precision_H_mean": 0.6162665717603052,
+    "test_precision_H_std": 0.04223642878463246,
+    "test_recall_H_mean": 0.6405511811023623,
+    "test_recall_H_std": 0.049554963273853614,
+    "test_f1_H_mean": 0.6272381774835439,
+    "test_f1_H_std": 0.03777098325444516
+  },
+  "confusion_matrix": [
+    [
+      67.64227642276421,
+      14.39024390243902,
+      17.967479674796742
+    ],
+    [
+      18.2,
+      58.71999999999999,
+      23.08
+    ],
+    [
+      17.51968503937007,
+      18.4251968503937,
+      64.05511811023622
+    ]
+  ],
+  "selected_features": [
+    "pct_missing",
+    "mean_vel",
+    "max_vel",
+    "fix_mean_dur",
+    "fix_rate",
+    "blink_mean_dur",
+    "blink_rate",
+    "sac_rate"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 8,
+  "n_seeds": 20,
+  "timestamp": "2025-10-18T10:42:00.363927"
+}

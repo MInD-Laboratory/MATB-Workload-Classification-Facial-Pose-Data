@@ -83,12 +83,12 @@ RF_PARAMS = {
 # ============================================================================
 
 DEFAULT_MODEL_CONFIG = {
-    "n_seeds": 20,  # Number of random seeds for reliability (random/participant splits and participant-specific sampling)
+    "n_seeds": 20,                      # Number of random seeds for reliability (random/participant splits and participant-specific sampling)
     "feature_selection": "backward",    # Options: "backward", "forward", None
-    "use_pose_derivatives": True,  # Include velocity/acceleration features from pose
+    "use_pose_derivatives": True,       # Include velocity/acceleration features from pose
     "use_time_features": False,         # Include temporal position features (normalized time)
     "include_order": False,             # Include condition order (LMH vs LHM) as feature
-    "normalize_features": True,  # Z-score normalize features using training set statistics
+    "normalize_features": True,         # Z-score normalize features using training set statistics
     "class_config": "all",              # Class configuration: "all", "L_vs_H", "L_vs_M", "M_vs_H", "LM_vs_H", "L_vs_MH"
     "use_pca": False,                   # Apply PCA after feature selection
     "pca_variance": 0.90,               # Variance to retain if using PCA

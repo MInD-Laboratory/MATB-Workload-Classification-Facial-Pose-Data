@@ -30,25 +30,18 @@ modeling/
 │   └── pipeline_utils.py        # Shared functions for data loading, modeling, evaluation
 ├── model_output/                # All results saved here
 │   ├── random_split/
-│   │   ├── procrustes_global/   # Results using global Procrustes normalization
-│   │   ├── procrustes_participant/
-│   │   └── original/
 │   ├── participant_split/
-│   │   ├── procrustes_global/
-│   │   ├── procrustes_participant/
-│   │   └── original/
 │   ├── lopo/
-│   │   ├── procrustes_global/
-│   │   ├── procrustes_participant/
-│   │   └── original/
 │   └── participant_specific/
-│       ├── procrustes_global/
-│       ├── procrustes_participant/
-│       └── original/
+├── run_logs/                    # Configuration combination run logs
 ├── run_rf_random_split.py       # Random split strategy
 ├── run_rf_participant_split.py  # Participant split strategy
 ├── run_rf_lopo.py               # Leave-one-participant-out strategy
 ├── run_rf_participant_specific.py  # Participant-specific learning curves
+├── run_config_combinations.py   # Automated configuration testing
+├── check_config.py              # Verify current configuration
+├── diagnose_config_issue.py     # Diagnostic tool for configuration problems
+├── verify_fix.py                # Verify derivative filtering is working correctly
 └── README.md                    # This file
 ```
 
@@ -65,7 +58,7 @@ modeling/
 
 ### 2. Performance (MATB Task Metrics)
 - **Path**: `../MATB_performance/data/processed/combined/performance_metrics_all.csv`
-- **Features**: Task accuracy, reaction times, failure rates for all MATB sub-tasks (tracking, system monitoring, communication, resource management)
+- **Features**: Task accuracy, reaction times, failure rates for all MATB sub-tasks
 
 ### 3. Eye Tracking (Gaze & Pupil)
 - **Path**: `../eye_tracking/data/processed/combined/eyegaze_metrics_all.csv`
@@ -73,11 +66,11 @@ modeling/
 
 ### 4. GSR (Galvanic Skin Response)
 - **Path**: `../gsr/data/processed/combined/gsr_features_all.csv`
-- **Features**: Skin conductance level (SCL), phasic/tonic components, response amplitudes, rise/recovery times
+- **Features**: Skin conductance level, phasic/tonic components, response amplitudes, rise/recovery times
 
 ### 5. ECG (Heart Rate Variability)
 - **Path**: `../ecg/data/processed/combined/ecg_features_all.csv`
-- **Features**: Heart rate (HR), RMSSD, pNN50, SDNN, LF/HF ratio, time and frequency domain HRV metrics
+- **Features**: Heart rate, RMSSD, pNN50, SDNN, LF/HF ratio, time and frequency domain HRV metrics
 
 ## Class Configurations
 
@@ -95,11 +88,11 @@ The pipeline supports **six different class configurations** for flexible analys
 - **LM_vs_H**: Low+Medium vs High
 - **L_vs_MH**: Low vs Medium+High
 
-These configurations are controlled via the `class_config` parameter in `DEFAULT_MODEL_CONFIG`. Each configuration filters or merges the data appropriately and is reflected in the output directory naming with suffixes like `_LvH`, `_LMvH`, etc.
+These configurations are controlled via the `class_config` parameter in `DEFAULT_MODEL_CONFIG` in `utils/config.py`.
 
-## Usage
+## Basic Usage
 
-### Basic Usage
+### Running Individual Modeling Strategies
 
 Each script supports the same core command-line interface:
 
@@ -107,22 +100,20 @@ Each script supports the same core command-line interface:
 # Run with default settings (procrustes_global pose variant, 3-class)
 python run_rf_random_split.py
 
-# Run with original pose variant
+# Run with specific pose variant
 python run_rf_random_split.py --pose-variant original
-
-# Run with participant-specific procrustes normalization
-python run_rf_participant_split.py --pose-variant procrustes_participant
 
 # Overwrite existing results
 python run_rf_lopo.py --pose-variant procrustes_global --overwrite
 
-# Dry run (see what would execute without running)
+# Dry run to see what would execute without running
 python run_rf_random_split.py --dry-run
+
+# Resume interrupted runs (random and participant split only)
+python run_rf_random_split.py --resume
 ```
 
 ### Participant-Specific Learning Curves
-
-The participant-specific script trains separate models for each participant using varying amounts of training data:
 
 ```bash
 # Default: stratified sampling (random N windows per condition)
@@ -131,82 +122,90 @@ python run_rf_participant_specific.py
 # Temporal-stratified sampling (first N windows per condition with buffer)
 python run_rf_participant_specific.py --strategy temporal_stratified
 
-# With different pose variant
-python run_rf_participant_specific.py --pose-variant original
-
-# Overwrite existing results
-python run_rf_participant_specific.py --overwrite
+# With specific pose variant
+python run_rf_participant_specific.py --pose-variant original --overwrite
 ```
 
-**Training Sizes**: The script tests [1, 2, 3, 5, 7, 9, 11] windows per condition (L, M, H), meaning training sizes range from 3 total windows (1 per condition) up to 33 windows (11 per condition).
+**Training Sizes**: Tests [1, 2, 3, 5, 7, 9, 11] windows per condition (L, M, H).
 
 **Sampling Strategies**:
 - **stratified**: Randomly samples N windows from each condition (balanced representation)
-- **temporal_stratified**: Takes the first N windows (in time) from each condition with a 1-window buffer to prevent data leakage due to 50% overlap between consecutive windows
+- **temporal_stratified**: Takes first N windows (in time) from each condition with 1-window buffer to prevent data leakage
 
-**Role of Random Seeds**:
+### Running Configuration Combinations
 
-The `n_seeds` parameter (default: 10) controls different aspects depending on the sampling strategy:
+The `run_config_combinations.py` script automates testing multiple model configurations by systematically varying specified parameters. It updates `utils/config.py`, clears Python cache, runs the model, and repeats for all combinations.
 
-- **stratified**: Random seeds control both:
-  1. Which windows are randomly sampled for training/test (data selection)
-  2. RandomForest model initialization (bootstrap sampling, feature subsets, tie-breaking)
-
-  Result: Different seeds produce different train/test splits AND different model initializations
-
-- **temporal_stratified**: Random seeds only control:
-  1. RandomForest model initialization (bootstrap sampling, feature subsets, tie-breaking)
-
-  The train/test split is deterministic (always first N windows for training, window N+1 as buffer, windows N+2+ for test)
-
-  Result: Different seeds produce the same train/test split but different model training outcomes
-
-**Why Multiple Seeds Matter**: Even with deterministic data splitting (temporal_stratified), running multiple seeds provides:
-- Confidence intervals around accuracy estimates
-- Robustness against RandomForest initialization effects
-- Variance estimates reflecting model training randomness rather than data sampling randomness
-
-For both strategies, results are aggregated across seeds to provide mean and standard deviation metrics for each participant at each training size.
-
-### Command-Line Arguments
-
-**All Scripts**:
-- `--pose-variant`: Pose normalization method
-  - `original`: No Procrustes normalization
-  - `procrustes_participant`: Participant-specific Procrustes alignment
-  - `procrustes_global`: Global Procrustes alignment (default)
-- `--overwrite`: Overwrite existing results (default: skip completed experiments)
-- `--dry-run`: Show what would run without executing
-
-**Random & Participant Split Only**:
-- `--resume`: Resume incomplete experiments at seed level
-
-**Participant-Specific Only**:
-- `--strategy`: Sampling strategy for learning curves
-  - `stratified`: Random N windows from each condition (default)
-  - `temporal_stratified`: First N windows from each condition with 1-window buffer
-
-### Recommended Workflow
-
-**Step 1**: Run random split to compare pose variants and modality combinations (fastest, ~2-4 hours)
 ```bash
-python run_rf_random_split.py --pose-variant procrustes_global
+# Test derivatives on/off with normalization on/off (4 combinations)
+python run_config_combinations.py \
+    --method random \
+    --vary use_pose_derivatives normalize_features
+
+# Test all feature selection options (3 combinations)
+python run_config_combinations.py \
+    --method lopo \
+    --vary feature_selection
+
+# Test PCA with different seed count
+python run_config_combinations.py \
+    --method random \
+    --vary use_pca \
+    --n-seeds 10
+
+# Preview combinations without running
+python run_config_combinations.py \
+    --method lopo \
+    --vary use_pose_derivatives normalize_features \
+    --dry-run
 ```
 
-**Step 2**: Run participant split for best-performing configuration (~2-4 hours)
+**Available Methods**:
+- `random` - Random split (30-60 min per combination)
+- `participant` - Participant split (30-60 min per combination)
+- `lopo` - Leave-one-participant-out (4-8 hours per combination)
+- `specific` - Participant-specific (2-4 hours per combination)
+
+**Available Parameters to Vary**:
+
+Boolean (True/False):
+- `use_pose_derivatives` - Include velocity/acceleration features
+- `normalize_features` - Z-score normalization
+- `use_pca` - PCA dimensionality reduction
+- `tune_hyperparameters` - Hyperparameter tuning
+- `use_time_features` - Temporal position features
+- `include_order` - Condition order features
+
+Categorical:
+- `feature_selection` - backward, forward, or None
+- `class_config` - all, L_vs_H, L_vs_M, M_vs_H, LM_vs_H, L_vs_MH
+
+**How It Works**:
+1. Generates all combinations of specified parameters
+2. For each combination:
+   - Updates `utils/config.py` with new parameter values
+   - Clears Python cache to ensure changes load
+   - Runs the specified modeling script with `--overwrite`
+   - Logs success/failure
+3. Restores original configuration when complete
+4. Saves detailed log to `run_logs/run_METHOD_TIMESTAMP.json`
+
+**Example**: Testing 2 parameters with 2 values each generates 4 combinations and runs the full modeling pipeline 4 times sequentially.
+
+### Diagnostic and Verification Tools
+
 ```bash
-python run_rf_participant_split.py --pose-variant procrustes_global
+# Check current configuration settings
+python check_config.py
+
+# Diagnose configuration issues (check if config changes are being applied)
+python diagnose_config_issue.py
+
+# Verify derivative filtering is working correctly
+python verify_fix.py
 ```
 
-**Step 3**: Run LOPO for strictest generalization assessment (~10-15 hours)
-```bash
-python run_rf_lopo.py --pose-variant procrustes_global
-```
-
-**Step 4**: Run participant-specific to assess individual calibration requirements (~8-12 hours)
-```bash
-python run_rf_participant_specific.py --pose-variant procrustes_global --strategy temporal_stratified
-```
+These tools help verify that configuration changes are properly applied and affecting model behavior.
 
 ## Model Configuration
 
@@ -216,70 +215,114 @@ Defined in `utils/config.py`:
 
 ```python
 RF_PARAMS = {
-    "n_estimators": 300,        # Number of trees
-    "max_depth": None,          # Unlimited tree depth
+    "n_estimators": 500,        # Number of trees
+    "max_depth": 30,            # Maximum tree depth
     "class_weight": "balanced", # Handle class imbalance
+    "min_samples_split": 5,     # Minimum samples to split node
+    "min_samples_leaf": 2,      # Minimum samples in leaf
+    "max_features": "log2",     # Features per split
     "n_jobs": -1,               # Use all CPU cores
 }
 ```
 
-### Evaluation Settings
+### Model Pipeline Settings
 
 ```python
 DEFAULT_MODEL_CONFIG = {
-    "n_seeds": 10,                    # Random seeds for reliability (10 for all strategies)
-    "feature_selection": "backward",  # Backward elimination using permutation importance
+    "n_seeds": 20,                    # Random seeds for reliability
+    "feature_selection": "backward",  # Options: "backward", "forward", None
+    "use_pose_derivatives": True,     # Include velocity/acceleration features
+    "use_time_features": False,       # Include temporal position features
+    "include_order": False,           # Include condition order as feature
+    "normalize_features": True,       # Z-score normalization
+    "class_config": "all",            # Class configuration
     "use_pca": False,                 # Apply PCA dimensionality reduction
-    "pca_variance": 0.95,             # Variance to retain if using PCA
+    "pca_variance": 0.90,             # Variance to retain if using PCA
     "write_cm": True,                 # Save confusion matrices
-    "tune_hyperparameters": False,    # Run RandomizedSearchCV for hyperparameter tuning
+    "tune_hyperparameters": False,    # Run RandomizedSearchCV
     "tune_n_iter": 30,                # Number of tuning iterations
     "tune_cv_folds": 5,               # CV folds for tuning
-    "use_pose_derivatives": True,     # Include velocity/acceleration features from pose
-    "use_time_features": False,       # Include temporal position features (normalized time within condition)
-    "class_config": "all",            # Class configuration (see Class Configurations section)
-    "include_order": False,           # Include condition order (LMH vs LHM) as binary feature
 }
 ```
 
-### Feature Selection
+### Feature Processing
 
-When `feature_selection` is set to `"backward"`:
-1. For participant-specific models: Features are selected using backward elimination on pooled data from the largest training size (11 windows per condition)
-2. For other strategies: Features are selected using backward elimination with permutation importance
-3. The same feature set is used across all random seeds for consistency
-4. Selected features are saved in the output JSON files
+**Feature Selection**: When `feature_selection` is set to `"backward"`, the pipeline uses backward elimination with permutation importance. Features are selected once (using training data) and applied consistently across all random seeds.
 
-### Condition Order Features
+**Normalization**: When `normalize_features` is True, features are z-score normalized using training set statistics (mean and standard deviation). The same statistics are applied to test data to prevent data leakage.
 
-When `include_order` is True (default), the model includes a binary feature indicating whether the participant experienced conditions in LMH or LHM order. This captures potential order effects in the experimental design.
+**PCA**: When `use_pca` is True, Principal Component Analysis is applied after feature selection to reduce dimensionality while retaining `pca_variance` (default 90%) of variance.
 
-### Pose Derivatives
+**Pose Derivatives**: When `use_pose_derivatives` is True, velocity (first derivative) and acceleration (second derivative) features from pose time series are included.
 
-When `use_pose_derivatives` is True, the pipeline includes velocity (first derivative) and acceleration (second derivative) features computed from the pose time series. This captures dynamic aspects of head and facial movements.
+**Time Features**: When `use_time_features` is True, normalized temporal position within each condition is included as features.
 
-### Time Features
+**Condition Order**: When `include_order` is True, a binary feature indicating LMH vs LHM condition order is included.
 
-When `use_time_features` is True, the pipeline includes normalized temporal position within each condition as features. This captures potential time-on-task effects.
+### Role of Random Seeds
+
+The `n_seeds` parameter (default: 20) controls:
+
+**For Random/Participant Split**:
+- Different train/test splits
+- Different RandomForest initialization (bootstrap sampling, feature subsets)
+
+**For LOPO**:
+- Different RandomForest initialization for each participant fold
+- Results aggregated across seeds to provide confidence intervals
+
+**For Participant-Specific (stratified)**:
+- Different random training/test window selections
+- Different RandomForest initialization
+
+**For Participant-Specific (temporal_stratified)**:
+- Only RandomForest initialization (data split is deterministic)
+
+Multiple seeds provide confidence intervals and robustness against initialization effects. Results are reported as mean and standard deviation across seeds.
 
 ## Output Format
 
-### Random, Participant, and LOPO Splits
+### Directory Structure
 
-Each experiment produces a JSON file (e.g., `pose_perf.json`):
+Results are organized by method and configuration:
+
+```
+model_output/
+├── random_split/
+│   ├── procrustes_global_all_backward_zscore/     # With derivatives, normalized
+│   │   ├── settings.json                           # Configuration used
+│   │   ├── experiment_log.csv                      # Summary of all experiments
+│   │   ├── pose.json                               # Individual experiment results
+│   │   ├── pose_perf.json
+│   │   └── ...
+│   └── procrustes_global_all_backward_noderiv_zscore/  # Without derivatives, normalized
+└── lopo/
+    └── procrustes_global_all_backward_zscore/
+```
+
+Directory names encode the configuration:
+- Pose variant (e.g., `procrustes_global`)
+- Class configuration (e.g., `all`, `LvH`)
+- Feature selection method (e.g., `backward`, `none`)
+- Optional modifiers (e.g., `noderiv`, `zscore`, `nonorm`, `pca`, `hyp`)
+
+### JSON Output Files
+
+Each experiment produces a JSON file with the following structure:
 
 ```json
 {
   "name": "pose_perf",
   "config": {
     "split_strategy": "random",
-    "n_seeds": 10,
+    "n_seeds": 20,
     "feature_selection": "backward",
     "use_pose_derivatives": true,
+    "normalize_features": true,
     "use_time_features": false,
     "class_config": "all",
-    "include_order": false,
-    ...
+    "use_pca": false,
+    "tune_hyperparameters": false
   },
   "metrics": {
     "test_bal_acc_mean": 0.75,
@@ -289,22 +332,53 @@ Each experiment produces a JSON file (e.g., `pose_perf.json`):
     "test_kappa_mean": 0.62,
     "test_kappa_std": 0.04,
     "test_precision_L_mean": 0.80,
+    "test_precision_L_std": 0.02,
     "test_recall_L_mean": 0.78,
-    ...
+    "test_recall_L_std": 0.03,
+    "test_f1_L_mean": 0.79,
+    "test_f1_L_std": 0.02
   },
-  "confusion_matrix": [[...], [...], [...]],
-  "selected_features": [...],
+  "confusion_matrix": [[85.2, 10.5, 4.3], [12.1, 79.8, 8.1], [5.7, 15.2, 79.1]],
+  "selected_features": ["feature1", "feature2", ...],
   "n_features": 97,
-  "n_seeds": 10,
-  "timestamp": "2025-10-17T10:30:00"
+  "n_seeds": 20,
+  "timestamp": "2025-10-18T10:30:00"
 }
 ```
 
-### Participant-Specific Learning Curves
+### LOPO Output
 
-Each experiment produces:
-1. **JSON file** with full results across all training sizes
-2. **CSV file** (`*_learning_curve.csv`) for easy plotting
+LOPO experiments include per-participant results with multiple random seeds per fold:
+
+```json
+{
+  "participant_results": [
+    {
+      "participant": "3105",
+      "n_seeds": 20,
+      "test_bal_acc_mean": 0.72,
+      "test_bal_acc_std": 0.03,
+      "test_f1_mean": 0.70,
+      "test_f1_std": 0.02,
+      "confusion_matrix": [[...], [...], [...]]
+    },
+    ...
+  ],
+  "n_participants": 49,
+  "n_seeds": 20,
+  "metrics": {
+    "test_bal_acc_mean": 0.70,
+    "test_bal_acc_std": 0.08
+  }
+}
+```
+
+### Participant-Specific Output
+
+Produces two files per experiment:
+
+1. **JSON file** with complete results across all training sizes
+2. **CSV file** (`*_learning_curve.csv`) for plotting
 
 JSON structure:
 ```json
@@ -313,174 +387,176 @@ JSON structure:
   "config": {
     "split_strategy": "participant_specific",
     "sampling_strategy": "temporal_stratified",
-    "n_seeds": 10,
-    ...
+    "n_seeds": 20
   },
-  "results_by_size": {
-    "1": {
-      "participant_results": [
-        {"participant": "3105", "test_bal_acc_mean": 0.55, "test_bal_acc_std": 0.08, ...},
-        ...
-      ],
-      "aggregate_mean": 0.58,
-      "aggregate_std": 0.12
-    },
-    "2": { ... },
-    ...
-    "11": { ... }
-  },
-  "learning_curve_summary": {
-    "training_sizes": [1, 2, 3, 5, 7, 9, 11],
-    "mean_accuracies": [0.58, 0.64, 0.68, 0.72, 0.75, 0.76, 0.77],
-    "std_accuracies": [0.12, 0.10, 0.09, 0.08, 0.07, 0.07, 0.06]
-  }
-}
-```
-
-### Experiment Log CSV
-
-Quick summary of all experiments (`experiment_log.csv`):
-
-```csv
-experiment_name,split_strategy,n_features,n_seeds,test_bal_acc_mean,test_bal_acc_std,...
-pose,random,85,10,0.68,0.04,...
-performance,random,12,10,0.72,0.03,...
-pose_perf,random,97,10,0.75,0.03,...
-...
-```
-
-### LOPO Output
-
-LOPO experiments run each fold with multiple random seeds and include per-participant results with confidence intervals:
-
-```json
-{
-  "participant_results": [
+  "learning_curve": [
     {
-      "participant": "3105",
-      "n_seeds": 10,
-      "test_bal_acc_mean": 0.72,
-      "test_bal_acc_std": 0.03,
-      "test_f1_mean": 0.70,
-      "test_f1_std": 0.02,
-      ...
-    },
-    {
-      "participant": "3206",
-      "n_seeds": 10,
-      "test_bal_acc_mean": 0.68,
-      "test_bal_acc_std": 0.04,
-      "test_f1_mean": 0.66,
-      "test_f1_std": 0.03,
-      ...
+      "aggregated": {
+        "train_size": 1,
+        "n_participants": 49,
+        "n_seeds": 20,
+        "test_bal_acc_mean": 0.58,
+        "test_bal_acc_std": 0.12,
+        "confusion_matrix": [[...], [...], [...]]
+      },
+      "per_participant": [...]
     },
     ...
   ],
-  "n_participants": 49,
-  "n_seeds": 10,
-  "metrics": {
-    "test_bal_acc_mean": 0.70,
-    "test_bal_acc_std": 0.08,
-    ...
-  }
+  "training_sizes": [1, 2, 3, 5, 7, 9, 11]
 }
 ```
 
-Each participant fold is evaluated with 10 different random seeds (RF initialization), and results are aggregated to provide mean and standard deviation. The overall metrics aggregate the participant-level means across all participants.
+### Configuration Combination Logs
+
+When using `run_config_combinations.py`, logs are saved to `run_logs/`:
+
+```json
+{
+  "timestamp": "2025-10-18T10:30:00",
+  "method": "lopo",
+  "pose_variant": "procrustes_global",
+  "total_combinations": 4,
+  "successful": 4,
+  "failed": 0,
+  "combinations": [
+    {
+      "config": {
+        "use_pose_derivatives": true,
+        "normalize_features": true,
+        "n_seeds": 20
+      },
+      "success": true,
+      "description": "normalize_features=True, use_pose_derivatives=True"
+    },
+    ...
+  ]
+}
+```
 
 ## Interpreting Results
 
 ### Key Metrics
 
-- **Balanced Accuracy**: Primary metric (handles class imbalance by averaging recall across classes)
-- **F1 Score**: Harmonic mean of precision and recall (macro-averaged for multi-class)
-- **Cohen's Kappa**: Agreement adjusted for chance (measures beyond-chance classification)
-- **Per-class metrics**: Precision, recall, F1 for each workload level individually
+- **Balanced Accuracy**: Primary metric (averages recall across classes, handles class imbalance)
+- **F1 Score**: Harmonic mean of precision and recall (weighted average for multi-class)
+- **Cohen's Kappa**: Agreement adjusted for chance
+- **Per-class Metrics**: Precision, recall, F1 for each workload level (L, M, H)
+- **Confusion Matrix**: Row-normalized percentages showing prediction distribution
 
 ### Comparing Split Strategies
 
-1. **Random Split**: Upper bound (easiest, same participants in train/test)
-2. **Participant Split**: Moderate difficulty (unseen participants, some participant overlap possible)
-3. **LOPO**: Lower bound (strictest test, each participant completely held out)
-4. **Participant-Specific**: Individual-level performance showing calibration needs
+Expected performance hierarchy: Random >= Participant >= LOPO
 
-Expected performance: Random ≥ Participant ≥ LOPO
+- **Random Split**: Upper bound (within-task generalization, same participants in train/test)
+- **Participant Split**: Cross-participant generalization (~20% participants held out)
+- **LOPO**: Lower bound (strictest test, each participant completely held out)
 
-The gap between random and LOPO indicates how much performance depends on participant-specific patterns vs. generalizable workload signatures.
+The gap between random and LOPO indicates how much performance depends on participant-specific patterns versus generalizable workload signatures.
 
 ### Comparing Pose Variants
 
 - **Original**: Raw normalized coordinates (interocular distance normalization)
-- **Procrustes Participant**: Aligned to participant-specific mean template (removes individual baseline differences)
-- **Procrustes Global**: Aligned to grand mean template across all participants (removes global position/rotation variability)
+- **Procrustes Participant**: Aligned to participant-specific mean template
+- **Procrustes Global**: Aligned to grand mean template across all participants
 
-Best variant depends on whether individual differences or common patterns are more predictive. Procrustes normalization typically improves generalization by removing irrelevant geometric variation.
+Procrustes normalization typically improves generalization by removing irrelevant geometric variation while preserving workload-relevant movements.
 
 ### Participant-Specific Learning Curves
 
-The learning curves show how balanced accuracy increases with more training windows per condition. Key insights:
+Learning curves show balanced accuracy versus training size (windows per condition). Key insights:
 
-- **Plateau point**: Training size where accuracy stops improving significantly
-- **Inter-participant variability**: Standard deviation across participants at each training size
-- **Minimum viable calibration**: Smallest training size achieving acceptable performance
+- **Plateau Point**: Training size where accuracy stops improving
+- **Inter-participant Variability**: Standard deviation across participants
+- **Minimum Calibration**: Smallest training size achieving acceptable performance
 
-These curves inform practical deployment decisions about how much individual calibration data is needed.
+These inform deployment decisions about individual calibration requirements.
 
 ## Expected Runtime
 
-| Strategy | Pose Variants | Total Experiments | Estimated Time |
-|----------|---------------|-------------------|----------------|
-| Random Split | 1 | 31 | 2-4 hours |
-| Random Split | 3 (all) | 93 | 6-12 hours |
-| Participant Split | 1 | 31 | 2-4 hours |
-| LOPO | 1 | 31 | 10-15 hours |
-| Participant-Specific | 1 | 31 × 7 sizes | 8-12 hours |
+| Strategy | Experiments | Time (n_seeds=20) |
+|----------|-------------|-------------------|
+| Random Split | 31 | 3-6 hours |
+| Participant Split | 31 | 3-6 hours |
+| LOPO | 31 | 15-25 hours |
+| Participant-Specific | 31 × 7 sizes | 12-20 hours |
 
-**Total for all strategies and variants**: ~35-50 hours
+Runtime varies with:
+- Number of features (affects feature selection time)
+- Hyperparameter tuning (adds 2-3x time if enabled)
+- Number of seeds (linear scaling)
+- Hardware (CPU cores for n_jobs=-1)
 
-Can be parallelized by running different scripts or pose variants simultaneously in separate terminal sessions.
+## Recommended Workflow
 
-## Experiment Tracking
-
-### Checking Progress
-
+**Step 1**: Run random split to compare configurations (fastest initial test)
 ```bash
-# View summary of configured experiments
-python run_rf_random_split.py --dry-run
-
-# View participant-specific training plan
-python run_rf_participant_specific.py --dry-run
-
-# Check experiment log
-cat model_output/random_split/procrustes_global/experiment_log.csv
-
-# Check specific experiment results
-cat model_output/lopo/procrustes_global/pose_perf.json | python -m json.tool
+python run_rf_random_split.py --pose-variant procrustes_global
 ```
 
-### Resuming Interrupted Runs
-
+**Step 2**: Test configuration variations using automated combinations
 ```bash
-# Random and participant split support resume at seed level
-python run_rf_random_split.py --resume
-
-# Participant-specific supports resume at experiment/size level
-python run_rf_participant_specific.py
-
-# LOPO runs all participants atomically (no resume, but skips completed experiments)
-python run_rf_lopo.py
+python run_config_combinations.py \
+    --method random \
+    --vary use_pose_derivatives normalize_features \
+    --n-seeds 10
 ```
 
-The pipeline automatically detects and skips completed experiments unless `--overwrite` is specified. This allows safe re-running of scripts after interruptions.
+**Step 3**: Run participant split for cross-participant validation
+```bash
+python run_rf_participant_split.py --pose-variant procrustes_global
+```
+
+**Step 4**: Run LOPO for strictest generalization assessment
+```bash
+python run_rf_lopo.py --pose-variant procrustes_global
+```
+
+**Step 5**: Run participant-specific to assess calibration requirements
+```bash
+python run_rf_participant_specific.py \
+    --pose-variant procrustes_global \
+    --strategy temporal_stratified
+```
+
+## Verifying Configuration
+
+Configuration changes in `utils/config.py` require Python cache to be cleared to take effect:
+
+```bash
+# Clear Python bytecode cache
+rm -rf utils/__pycache__ __pycache__
+
+# Verify current configuration
+python check_config.py
+
+# Diagnose configuration issues
+python diagnose_config_issue.py
+```
+
+When running models with modified configurations, always use the `--overwrite` flag to ensure existing results are regenerated with the new settings:
+
+```bash
+python run_rf_random_split.py --pose-variant procrustes_global --overwrite
+```
 
 ## Dependencies
 
-Required packages:
-```bash
-pip install numpy pandas scikit-learn tqdm scipy
+Required Python packages:
+```
+numpy>=1.20
+pandas>=1.3
+scikit-learn>=1.0
+scipy>=1.7
+tqdm>=4.60
 ```
 
-All scripts use scikit-learn's RandomForestClassifier and standard evaluation metrics. No deep learning frameworks required.
+Install via:
+```bash
+pip install numpy pandas scikit-learn scipy tqdm
+```
+
+All modeling uses scikit-learn's `RandomForestClassifier` and standard evaluation metrics. No deep learning frameworks required.
 
 ## Citation
 

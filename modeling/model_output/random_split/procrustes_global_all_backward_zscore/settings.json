@@ -1,0 +1,14 @@
+{
+  "pose_variant": "procrustes_global",
+  "split_strategy": "random",
+  "class_config": "all",
+  "feature_selection": "backward",
+  "use_pose_derivatives": true,
+  "use_time_features": false,
+  "normalize_features": true,
+  "include_order": false,
+  "tune_hyperparameters": false,
+  "use_pca": false,
+  "n_seeds": 20,
+  "timestamp": "2025-10-18T10:38:38.128326"
+}

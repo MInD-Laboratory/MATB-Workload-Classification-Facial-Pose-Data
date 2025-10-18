@@ -1,0 +1,91 @@
+{
+  "name": "perf_ecg",
+  "config": {
+    "n_seeds": 20,
+    "feature_selection": "backward",
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "include_order": false,
+    "normalize_features": true,
+    "class_config": "all",
+    "use_pca": false,
+    "pca_variance": 0.9,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "name": "perf_ecg",
+    "feature_groups": [
+      "performance",
+      "ecg"
+    ],
+    "split_strategy": "random"
+  },
+  "metrics": {
+    "test_acc_mean": 0.7863095238095238,
+    "test_acc_std": 0.019302415491949325,
+    "test_bal_acc_mean": 0.7863758495337443,
+    "test_bal_acc_std": 0.019361485404214823,
+    "test_f1_mean": 0.7891968234056103,
+    "test_f1_std": 0.0188201807836002,
+    "test_kappa_mean": 0.67948801387397,
+    "test_kappa_std": 0.028964519674914556,
+    "test_precision_L_mean": 0.9207813728726244,
+    "test_precision_L_std": 0.02507483833061968,
+    "test_recall_L_mean": 0.7747747747747749,
+    "test_recall_L_std": 0.04325509557819055,
+    "test_f1_L_mean": 0.8407906614850795,
+    "test_f1_L_std": 0.028996733045021407,
+    "test_precision_M_mean": 0.6748858683307358,
+    "test_precision_M_std": 0.025778042059467245,
+    "test_recall_M_mean": 0.8054054054054054,
+    "test_recall_M_std": 0.042997563523874426,
+    "test_f1_M_mean": 0.7340696161746403,
+    "test_f1_M_std": 0.02963344456203116,
+    "test_precision_H_mean": 0.8078804874701891,
+    "test_precision_H_std": 0.030962526127067708,
+    "test_recall_H_mean": 0.7789473684210526,
+    "test_recall_H_std": 0.03176818236892465,
+    "test_f1_H_mean": 0.7926372091583873,
+    "test_f1_H_std": 0.023744035999941186
+  },
+  "confusion_matrix": [
+    [
+      77.47747747747749,
+      18.60360360360361,
+      3.9189189189189184
+    ],
+    [
+      4.234234234234234,
+      80.54054054054055,
+      15.225225225225222
+    ],
+    [
+      2.4122807017543857,
+      19.69298245614035,
+      77.89473684210527
+    ]
+  ],
+  "selected_features": [
+    "sysmon_failure_rate",
+    "sysmon_average_reaction_times",
+    "comms_failure_rate",
+    "track_failure_rate",
+    "resman_failure_rate",
+    "average_accuracy",
+    "average_reaction_time",
+    "t_end_sec",
+    "HRV_MeanNN",
+    "HRV_MedianNN",
+    "HRV_Prc80NN",
+    "HRV_VHF",
+    "HRV_SD1SD2",
+    "HRV_S",
+    "HRV_SDNNa",
+    "HRV_MFDFA_alpha1_Max"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 16,
+  "n_seeds": 20,
+  "timestamp": "2025-10-18T10:59:14.753058"
+}

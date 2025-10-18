@@ -1,8 +1,64 @@
 # Eye Tracking Processing Pipeline
 
-Pipeline for processing EyeLink eye tracker data, detecting eye events (blinks, fixations, saccades), and extracting windowed gaze metrics for cognitive workload analysis.
+Processes eye tracker data to extract gaze patterns, pupil size, and eye movement events that indicate cognitive workload.
 
-## Overview
+## What This Does (Simple Explanation)
+
+This pipeline analyzes eye movement data to measure:
+- Where you're looking on the screen (gaze position)
+- How big your pupils are (changes with mental effort)
+- When you blink
+- When your eyes are holding still (fixations)
+- When your eyes are jumping between locations (saccades)
+
+These patterns change when mental workload increases or decreases.
+
+## Pipeline Overview Diagram
+
+```
+Raw EyeLink CSV Files (gaze coordinates & pupil data at 1000 Hz)
+           │
+           ▼
+    ┌──────────────────┐
+    │ 1. Load & Validate│
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 2. Normalize     │
+    │    Gaze to       │
+    │    Screen (0-1)  │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 3. Detect        │
+    │    Blinks        │
+    │  (pupil size)    │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 4. Detect        │
+    │    Fixations     │
+    │  (stable gaze)   │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 5. Detect        │
+    │    Saccades      │
+    │  (rapid moves)   │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 6. Extract       │
+    │    Windowed      │
+    │    Metrics       │
+    │  (60s windows)   │
+    └────────┬─────────┘
+             │
+             ▼
+    Eye Tracking Features Ready for Analysis
+```
+
+## Technical Overview
 
 This pipeline processes raw EyeLink CSV files through the following steps:
 
@@ -65,19 +121,19 @@ eye_tracking/
 
 ### Participant Info File
 
-**Location**: Project root `participant_info.csv`
+**Location**: `../data/participant_info.csv` (project root data directory)
 
 **Required columns**:
-- `participant`: Participant ID (e.g., 3105)
-- `trial_1`, `trial_2`, `trial_3`: Condition codes for each trial
+- `Participant ID`: Participant ID (e.g., 3105)
+- `session01`, `session02`, `session03`: Condition codes for each session
 
 **Condition codes**: L (Low), M (Moderate), H (High)
 
 **Example**:
 ```
-participant,trial_1,trial_2,trial_3
+Participant ID,session01,session02,session03
 3105,L,M,H
-3106,M,H,L
+3106,L,M,H
 ```
 
 This file maps trial numbers to experimental conditions. The pipeline uses this to generate condition-based output filenames (e.g., `3105_L_eyegaze_metrics.csv` instead of `3105_session01_eyegaze_metrics.csv`).
@@ -142,10 +198,11 @@ eye_tracking/
     └── eyelink_data/           # Raw EyeLink CSVs here
 ```
 
-And participant info in project root:
+And participant info in project root data directory:
 ```
 MATB-Workload-Classification-Facial-Pose-Data/
-└── participant_info.csv        # Participant metadata here
+└── data/
+    └── participant_info.csv        # Participant metadata here
 ```
 
 No configuration needed - the pipeline will use these default paths.

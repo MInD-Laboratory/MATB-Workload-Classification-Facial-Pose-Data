@@ -1,8 +1,59 @@
 # MATB Performance Data Processing Pipeline
 
-This pipeline processes Multi-Attribute Task Battery (MATB) performance data and extracts windowed performance metrics for all four sub-tasks.
+Processes task performance data to extract accuracy, reaction time, and failure metrics during the workload experiments.
 
-## Overview
+## What This Does (Simple Explanation)
+
+The MATB (Multi-Attribute Task Battery) is a computer task that simulates piloting an aircraft. Participants must monitor multiple systems simultaneously. This pipeline:
+- Tracks how accurately participants respond to each sub-task
+- Measures how quickly they react to events
+- Calculates error rates and missed responses
+- Organizes all this into time windows for analysis
+
+Performance typically declines (more errors, slower reactions) when workload increases.
+
+## Pipeline Overview Diagram
+
+```
+Raw MATB CSV Files (event logs from 4 sub-tasks)
+           │
+           ▼
+    ┌──────────────────┐
+    │ 1. Load & Parse  │
+    │    Event Logs    │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 2. Map Session   │
+    │    to Condition  │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────────────────┐
+    │ 3. Extract Metrics Per Task  │
+    │    - System Monitoring       │
+    │    - Communications          │
+    │    - Tracking                │
+    │    - Resource Management     │
+    └────────┬─────────────────────┘
+             │
+    ┌────────▼─────────┐
+    │ 4. Apply         │
+    │    Windowing     │
+    │  (60s windows)   │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 5. Calculate     │
+    │    Aggregate     │
+    │    Accuracy &    │
+    │    Reaction Time │
+    └────────┬─────────┘
+             │
+             ▼
+    Performance Metrics Ready for Analysis
+```
+
+## MATB Sub-Tasks Overview
 
 The MATB is a complex multitasking environment consisting of four concurrent sub-tasks:
 1. **System Monitoring (SYSMON)** - Detecting and responding to indicator light and gauge failures
@@ -260,9 +311,9 @@ All pipelines share:
 ## Troubleshooting
 
 ### File not found errors
-- Check `.env` paths point to correct OneDrive location
-- Ensure `PNAS-MATB/matb_outputs/` folder exists
-- Verify `participant_info.csv` is in `PNAS-MATB/` folder
+- Check `.env` paths point to correct data location
+- Ensure MATB raw data directory exists
+- Verify `participant_info.csv` is in `../data/` (project root data directory)
 
 ### Import errors
 ```bash

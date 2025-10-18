@@ -1,0 +1,99 @@
+{
+  "name": "perf_eye_ecg",
+  "config": {
+    "n_seeds": 20,
+    "feature_selection": "backward",
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "include_order": false,
+    "normalize_features": true,
+    "class_config": "all",
+    "use_pca": false,
+    "pca_variance": 0.9,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "name": "perf_eye_ecg",
+    "feature_groups": [
+      "performance",
+      "eye_tracking",
+      "ecg"
+    ],
+    "split_strategy": "random"
+  },
+  "metrics": {
+    "test_acc_mean": 0.8328220858895705,
+    "test_acc_std": 0.023978483295744066,
+    "test_bal_acc_mean": 0.8323378751697336,
+    "test_bal_acc_std": 0.023755995566376434,
+    "test_f1_mean": 0.8347254472766036,
+    "test_f1_std": 0.023420567729816943,
+    "test_kappa_mean": 0.7489762516740239,
+    "test_kappa_std": 0.03600653517863357,
+    "test_precision_L_mean": 0.9436058890233898,
+    "test_precision_L_std": 0.02167924166212548,
+    "test_recall_L_mean": 0.7980952380952383,
+    "test_recall_L_std": 0.030211886496715454,
+    "test_f1_L_mean": 0.8643836554418949,
+    "test_f1_L_std": 0.02029603553916858,
+    "test_precision_M_mean": 0.7352786435152561,
+    "test_precision_M_std": 0.03526024063047144,
+    "test_recall_M_mean": 0.8555555555555555,
+    "test_recall_M_std": 0.033506157995766735,
+    "test_f1_M_mean": 0.7904255292425242,
+    "test_f1_M_std": 0.02873939047260115,
+    "test_precision_H_mean": 0.8569164571961153,
+    "test_precision_H_std": 0.03410113074925472,
+    "test_recall_H_mean": 0.843362831858407,
+    "test_recall_H_std": 0.0450417816299829,
+    "test_f1_H_mean": 0.8495066799343464,
+    "test_f1_H_std": 0.03258431456469101
+  },
+  "confusion_matrix": [
+    [
+      79.80952380952381,
+      16.95238095238095,
+      3.2380952380952372
+    ],
+    [
+      2.777777777777778,
+      85.55555555555557,
+      11.666666666666666
+    ],
+    [
+      1.8141592920353986,
+      13.849557522123897,
+      84.33628318584071
+    ]
+  ],
+  "selected_features": [
+    "sysmon_failure_rate",
+    "sysmon_average_reaction_times",
+    "track_failure_rate",
+    "resman_failure_rate",
+    "average_accuracy",
+    "average_reaction_time",
+    "pct_missing",
+    "mean_vel",
+    "max_vel",
+    "rms_disp",
+    "fix_mean_dur",
+    "blink_mean_dur",
+    "blink_rate",
+    "sac_rate",
+    "t_end_sec",
+    "HRV_MeanNN",
+    "HRV_MedianNN",
+    "HRV_pNN20",
+    "HRV_MaxNN",
+    "HRV_S",
+    "HRV_CVI",
+    "HRV_SDNNa",
+    "HRV_MFDFA_alpha1_Max"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 23,
+  "n_seeds": 20,
+  "timestamp": "2025-10-18T11:21:04.644306"
+}

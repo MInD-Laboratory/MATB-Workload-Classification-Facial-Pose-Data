@@ -1,8 +1,60 @@
 # GSR Processing Pipeline
 
-Pipeline for processing Shimmer GSR data, decomposing into phasic (SCR) and tonic (SCL) components, detecting SCR peaks, and extracting electrodermal activity (EDA) features for cognitive workload analysis.
+Processes skin conductance data to extract stress and arousal indicators related to cognitive workload.
 
-## Overview
+## What This Does (Simple Explanation)
+
+GSR (Galvanic Skin Response) measures electrical activity on your skin, which changes with stress, arousal, and mental effort. This pipeline:
+- Cleans the raw electrical signal from the skin
+- Separates fast responses (reactions to events) from slow baseline changes
+- Detects when your skin conductance spikes
+- Calculates features that indicate stress and workload levels
+
+Higher mental workload typically causes more frequent skin conductance responses and changes in baseline levels.
+
+## Pipeline Overview Diagram
+
+```
+Raw Shimmer GSR CSV Files (skin conductance at 20 Hz)
+           │
+           ▼
+    ┌──────────────────┐
+    │ 1. Load & Validate│
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 2. Clean Signal  │
+    │  (remove noise)  │
+    └────────┬─────────┘
+             │
+    ┌────────▼──────────┐
+    │ 3. Decompose into │
+    │    - Phasic (SCR) │
+    │    - Tonic (SCL)  │
+    └────────┬──────────┘
+             │
+    ┌────────▼─────────┐
+    │ 4. Detect SCR    │
+    │    Peaks         │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 5. Apply         │
+    │    Windowing     │
+    │  (60s windows)   │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 6. Extract EDA   │
+    │    Features      │
+    │  (per window)    │
+    └────────┬─────────┘
+             │
+             ▼
+    GSR Features Ready for Analysis
+```
+
+## Technical Overview
 
 This pipeline processes raw Shimmer GSR CSV files through the following steps:
 
@@ -63,7 +115,7 @@ gsr/
 
 ### Participant Info File
 
-**Location**: Project root `participant_info.csv`
+**Location**: `../data/participant_info.csv` (project root data directory)
 
 **Required columns**:
 - `Participant ID`: Participant ID (e.g., 3208)
@@ -137,10 +189,11 @@ gsr/
     └── gsr_data/                   # Raw Shimmer CSVs here
 ```
 
-And participant info in project root:
+And participant info in project root data directory:
 ```
 MATB-Workload-Classification-Facial-Pose-Data/
-└── participant_info.csv            # Participant metadata here
+└── data/
+    └── participant_info.csv            # Participant metadata here
 ```
 
 No configuration needed - the pipeline will use these default paths.

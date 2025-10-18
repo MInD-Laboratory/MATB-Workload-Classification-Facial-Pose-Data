@@ -117,10 +117,10 @@ EXPERIMENTS = [
 #
 # These represent N windows from EACH condition (L, M, H):
 #   - Training size 10 = 10 from L + 10 from M + 10 from H = 30 total training
-#   - Test = remaining 5 per condition = 15 total test
-#   - Max is 12 to leave adequate test data (3 per condition)
+#   - Test = remaining 4 per condition = 12 total test (not 5 per condition because we skip a window to ensure no leakage)
+#   - Max is 11 to leave adequate test data (3 per condition; not 4 because we skip a window to ensure no leakage)
 
-TRAINING_SIZES = [1, 2, 3, 5, 7, 9, 11]  # Windows per condition
+TRAINING_SIZES = [2, 3, 4, 5, 7, 9, 11]  # Windows per condition
 
 # ============================================================================
 # COMMAND LINE ARGUMENTS
@@ -141,7 +141,7 @@ Method:
   Uses stratified sampling: takes N windows from EACH condition (L, M, H)
   to ensure balanced class representation at all training sizes.
 
-  Training sizes: [1, 2, 3, 5, 7, 9, 11] windows per condition
+  Training sizes: [2, 3, 4, 5, 7, 9, 11] windows per condition
         """
     )
 

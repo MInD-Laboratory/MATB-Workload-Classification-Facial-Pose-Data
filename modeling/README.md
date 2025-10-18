@@ -1,8 +1,73 @@
 # Random Forest Modeling for Workload Classification
 
-This directory contains Random Forest classification models for predicting workload levels from multimodal physiological and behavioral data collected during the Multi-Attribute Task Battery (MATB).
+Uses machine learning to automatically predict workload levels (Low, Medium, High) from the features extracted by all the processing pipelines.
 
-## Overview
+## What This Does (Simple Explanation)
+
+After all the pipelines extract features from pose, ECG, GSR, eye-tracking, and task performance data, this module:
+- Combines features from different data sources
+- Trains Random Forest models to recognize patterns associated with each workload level
+- Tests how well the models can predict workload on new data
+- Compares different combinations of data sources to see which work best
+
+The goal is to determine which measurements (or combinations) are most useful for detecting mental workload.
+
+## Modeling Overview Diagram
+
+```
+Features from All Pipelines
+    │
+    ├──> Pose Features ─────────┐
+    ├──> ECG Features ──────────┤
+    ├──> GSR Features ──────────┤
+    ├──> Eye Features ──────────┤
+    └──> Performance Features ──┘
+                │
+                ▼
+       ┌─────────────────┐
+       │ Feature         │
+       │ Combination     │
+       │ (31 experiments)│
+       └────────┬────────┘
+                │
+                ▼
+       ┌─────────────────┐
+       │ Feature         │
+       │ Selection       │
+       │ (optional)      │
+       └────────┬────────┘
+                │
+                ▼
+       ┌─────────────────┐
+       │ Train Random    │
+       │ Forest Models   │
+       └────────┬────────┘
+                │
+    ┌───────────┴───────────┐
+    │                       │
+    ▼                       ▼
+Random Split         Participant Split
+(within-task)        (cross-participant)
+    │                       │
+    ▼                       ▼
+Leave-One-Out        Participant-Specific
+(strictest test)     (calibration needs)
+    │                       │
+    └───────────┬───────────┘
+                ▼
+       ┌─────────────────┐
+       │ Performance     │
+       │ Evaluation      │
+       │ (accuracy,      │
+       │  precision,     │
+       │  recall, F1)    │
+       └────────┬────────┘
+                │
+                ▼
+        Results & Comparisons
+```
+
+## Technical Overview
 
 The modeling pipeline implements **four different cross-validation strategies** to assess model performance and generalization:
 
@@ -126,7 +191,7 @@ python run_rf_participant_specific.py --strategy temporal_stratified
 python run_rf_participant_specific.py --pose-variant original --overwrite
 ```
 
-**Training Sizes**: Tests [1, 2, 3, 5, 7, 9, 11] windows per condition (L, M, H).
+**Training Sizes**: Tests [2, 3, 4, 5, 7, 9, 11] windows per condition (L, M, H).
 
 **Sampling Strategies**:
 - **stratified**: Randomly samples N windows from each condition (balanced representation)

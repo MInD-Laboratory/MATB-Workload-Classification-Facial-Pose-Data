@@ -2,15 +2,71 @@
 
 **Research Project:** Code, Data Analysis and Modelling comparing Workload Classification and Prediction from Facial Pose, Physiological, and Eye-Tracking Measures.
 
+## What This Project Does
+
+This project analyzes how different measures of human behavior and physiology change during tasks with different levels of mental workload (Low, Medium, High).
+
+We process data from:
+- **Facial movements** - How your face moves and expressions change
+- **Heart activity** - Heart rate patterns and variability
+- **Skin conductance** - Electrical activity on the skin (related to stress/arousal)
+- **Eye movements** - Where you look and how your pupils respond
+- **Task performance** - How well you complete the tasks
+
+All of this data is then used to train machine learning models that can automatically detect workload levels.
+
 ## Project Overview
 
-This repository contains a comprehensive analysis pipeline for workload classification using multiple physiological and behavioral modalities collected during Multi-Attribute Task Battery (MATB) experiments:
+This repository contains analysis pipelines for workload classification using multiple physiological and behavioral measures collected during Multi-Attribute Task Battery (MATB) experiments:
 
-- **Facial Pose Analysis** (COMPLETE) - Extract behavioral features from OpenPose facial landmarks
-- **ECG Analysis** (Planned) - Heart rate variability and cardiac measures
-- **GSR Analysis** (Planned) - Galvanic skin response and stress indicators
-- **Eye-Tracking Analysis** (Planned) - Gaze patterns and attention measures
-- **Multi-Modal Modeling** (Planned) - Machine learning classification and prediction
+- **Facial Pose Analysis** - Extract behavioral features from facial landmarks
+- **ECG Analysis** - Heart rate variability and cardiac measures
+- **GSR Analysis** - Galvanic skin response and electrodermal activity
+- **Eye-Tracking Analysis** - Gaze patterns and pupil responses
+- **MATB Performance** - Task accuracy and reaction times
+- **Multi-Modal Modeling** - Machine learning classification and prediction
+
+## Workflow Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Raw Data Collection                        │
+│  (Pose, ECG, GSR, Eye-Tracking, Task Performance during MATB)  │
+└────────────┬────────────────────────────────────────────────────┘
+             │
+             ├──> Pose Pipeline ──────────> Facial Features
+             ├──> ECG Pipeline ───────────> HRV Features
+             ├──> GSR Pipeline ───────────> EDA Features
+             ├──> Eye Pipeline ───────────> Gaze/Pupil Features
+             └──> Performance Pipeline ──> Task Metrics
+                         │
+                         ▼
+             ┌───────────────────────┐
+             │  Feature Extraction   │
+             │  (60s windows, 50%    │
+             │   overlap)            │
+             └───────────┬───────────┘
+                         │
+                         ▼
+             ┌───────────────────────┐
+             │  Statistical Analysis │
+             │  (Mixed-effects       │
+             │   models)             │
+             └───────────────────────┘
+                         │
+                         ▼
+             ┌───────────────────────┐
+             │  Machine Learning     │
+             │  (Random Forest       │
+             │   classification)     │
+             └───────────────────────┘
+                         │
+                         ▼
+             ┌───────────────────────┐
+             │  Workload Prediction  │
+             │  (Low/Medium/High)    │
+             └───────────────────────┘
+```
 
 ## Quick Start
 
@@ -28,7 +84,7 @@ This repository contains a comprehensive analysis pipeline for workload classifi
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/MATB-Workload-Classification-Facial-Pose-Data.git
+git clone [REPOSITORY_URL]
 
 # Navigate to the project directory
 cd MATB-Workload-Classification-Facial-Pose-Data
@@ -88,25 +144,21 @@ MATB-Workload-Classification-Facial-Pose-Data/
 │   │   ├── window_utils.py            # Windowing and segmentation
 │   │   └── stats_utils.py             # Statistical analysis
 │   ├── data/                          # Data directory (user-provided)
-│   │   ├── raw_data/                  # Raw OpenPose CSV files
+│   │   ├── pose_data/                 # Raw OpenPose CSV files
 │   │   └── processed/                 # Processed outputs (generated)
 │   └── figs/                          # Generated statistical plots
 │
-├── docs/                              # Comprehensive documentation
-│   ├── POSE.md                        # Detailed pose analysis guide
-│   ├── ECG.md                         # ECG analysis documentation
-│   ├── GSR.md                         # GSR analysis documentation
-│   └── EYE_TRACKING.md               # Eye-tracking documentation
-│
-├── ecg/                              # Heart rate analysis (PLANNED)
-├── gsr/                              # Galvanic skin response (PLANNED)
-├── eye_tracking/                     # Gaze analysis (PLANNED)
-└── modeling/                         # ML classification (PLANNED)
+├── ecg/                              # Heart rate analysis
+├── gsr/                              # Galvanic skin response
+├── eye_tracking/                     # Gaze analysis
+├── MATB_performance/                 # Task performance metrics
+├── modeling/                         # ML classification
+└── stats_utils/                      # Statistical analysis utilities
 ```
 
-## Facial Pose Analysis (Ready to Use!)
+## Facial Pose Analysis
 
-The facial pose analysis pipeline is fully implemented and ready for use:
+The facial pose analysis pipeline includes:
 
 ### Processing Pipeline
 - **8-step automated processing** from raw OpenPose data to analysis-ready features
@@ -134,43 +186,60 @@ jupyter notebook pose_processing_visualisation.ipynb
 
 ## Documentation
 
-### Core Documentation
-- **[Main README](README.md)** - This file (project overview and setup)
-
-### Module-Specific Documentation
-- **[Pose Analysis Guide](docs/POSE.md)** - Complete guide to facial pose analysis
-  - Data requirements and formats
-  - Processing pipeline details
-  - Feature extraction methods
-  - Statistical analysis approaches
-  - Troubleshooting guide
-
-- **[ECG Documentation](docs/ECG.md)** - Heart rate variability analysis (Planned)
-- **[GSR Documentation](docs/GSR.md)** - Galvanic skin response analysis (Planned)
-- **[Eye-Tracking Documentation](docs/EYE_TRACKING.md)** - Gaze pattern analysis (Planned)
+Each analysis module contains its own detailed README:
+- **[Pose Analysis](Pose/README.md)** - Facial landmark processing and feature extraction
+- **[ECG Analysis](ecg/README.md)** - Heart rate variability analysis
+- **[GSR Analysis](gsr/README.md)** - Galvanic skin response processing
+- **[Eye-Tracking Analysis](eye_tracking/README.md)** - Gaze pattern analysis
+- **[MATB Performance](MATB_performance/README.md)** - Task performance metrics
+- **[Modeling](modeling/README.md)** - Machine learning classification
+- **[Stats Utilities](stats_utils/README.md)** - Statistical analysis utilities
 
 ### Interactive Notebooks
-- **[Pose Processing & Visualization](pose/pose_processing_visualisation.ipynb)** - Complete pipeline walkthrough with visualizations
-- **[Statistical Analysis](pose/stats_figures.ipynb)** - Publication-ready statistical plots
+- **[Pose Processing & Visualization](Pose/pose_processing_visualisation.ipynb)** - Complete pipeline walkthrough with visualizations
+- **[Pose Statistical Analysis](Pose/pose_stats_figures.ipynb)** - Publication-ready statistical plots
+- **[ECG Analysis](ecg/ecg_analysis.ipynb)** - ECG processing and HRV analysis
+- **[GSR Analysis](gsr/gsr_analysis.ipynb)** - GSR signal processing and features
+- **[Eye Tracking Analysis](eye_tracking/eye_gaze_analysis.ipynb)** - Eye tracking metrics and visualization
+- **[Performance Analysis](MATB_performance/performance_metrics_analysis.ipynb)** - MATB task performance
+- **[Modeling Visualization](modeling/modeling_figures.ipynb)** - Model results and comparisons
 
-## Data Download
+## Data Structure
 
-**Data download links will be added here after data hosting is set up.**
+Data files are organized within each module's `data/` directory. The project expects:
 
-Expected data structure:
 ```
-pose/data/raw_data/
-├── participant_info.csv          # Participant metadata and conditions
-├── 3101_01_pose.csv              # Participant 3101, Trial 1
-├── 3101_02_pose.csv              # Participant 3101, Trial 2
-├── 3101_03_pose.csv              # Participant 3101, Trial 3
-└── ...                           # Additional participants
+data/
+└── participant_info.csv          # Participant metadata and condition mapping
+
+Pose/data/
+└── pose_data/
+    ├── 3101_01_pose.csv          # Participant 3101, Session 1
+    ├── 3101_02_pose.csv          # Participant 3101, Session 2
+    ├── 3101_03_pose.csv          # Participant 3101, Session 3
+    └── ...                       # Additional participants
+
+eye_tracking/data/
+└── eyelink_data/
+    ├── 3105_session01.csv        # Participant 3105, Session 1
+    └── ...
+
+ecg/data/
+└── ecg_data/
+    ├── 3105_ecg_session01.csv    # ECG waveform
+    ├── 3105_summary_session01.csv # Summary data
+    └── ...
+
+gsr/data/
+└── gsr_data/
+    ├── 3208_session01.csv        # Participant 3208, Session 1
+    └── ...
 ```
 
 ## Citation
 
-If you use this code in your research, please cite the associated publication (details to be added upon publication).
+If you use this code in your research, please cite the associated publication.
 
 ## License
 
-This project is licensed for academic and research use. See license details (to be added).
+This project is licensed for academic and research use.

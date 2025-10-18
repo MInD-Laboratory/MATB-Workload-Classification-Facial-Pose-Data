@@ -22,8 +22,9 @@ ipympl>=0.8.0
 scikit-learn>=1.0.0
 statsmodels>=0.12.0
 rpy2>=3.4.5
-# Optional: For advanced plotting
-plotly>=5.0.0
+
+# Environment configuration
+python-dotenv>=0.19.0
 
 # For ECG and GSR analysis:
 neurokit2>=0.2.0

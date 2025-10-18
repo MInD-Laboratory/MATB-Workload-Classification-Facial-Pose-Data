@@ -1,8 +1,70 @@
 # ECG Processing Pipeline
 
-Pipeline for processing Zephyr BioHarness ECG data, detecting R-peaks, and extracting heart rate variability (HRV) features for cognitive workload analysis.
+Processes heart electrical activity (ECG) to extract heart rate variability patterns that reflect cognitive workload and stress.
 
-## Overview
+## What This Does (Simple Explanation)
+
+ECG (electrocardiogram) records your heartbeat patterns. This pipeline:
+- Detects each heartbeat from the electrical signal
+- Calculates how much time varies between heartbeats (HRV)
+- Extracts features from these patterns
+
+Heart rate variability changes with mental workload - typically, higher workload leads to less variability and more regular heartbeats, indicating stress on the cardiovascular system.
+
+## Pipeline Overview Diagram
+
+```
+Raw Zephyr ECG CSV Files (heart electrical signal at 250 Hz)
+           │
+           ▼
+    ┌──────────────────┐
+    │ 1. Load & Validate│
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 2. Clean Signal  │
+    │  (filter noise)  │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 3. Assess Signal │
+    │    Quality       │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 4. Detect        │
+    │    R-Peaks       │
+    │  (heartbeats)    │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 5. Correct       │
+    │    Artifacts     │
+    │  (fix errors)    │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 6. Calculate     │
+    │    Heart Rate    │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 7. Apply         │
+    │    Windowing     │
+    │  (60s windows)   │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 8. Extract HRV   │
+    │    Features      │
+    │  (time/freq)     │
+    └────────┬─────────┘
+             │
+             ▼
+    HRV Features Ready for Analysis
+```
+
+## Technical Overview
 
 This pipeline processes raw Zephyr ECG CSV files through the following steps:
 
@@ -74,7 +136,7 @@ ecg/
 
 ### Participant Info File
 
-**Location**: Project root `participant_info.csv`
+**Location**: `../data/participant_info.csv` (project root data directory)
 
 **Required columns**:
 - `Participant ID`: Participant ID (e.g., 3105)
@@ -148,10 +210,11 @@ ecg/
     └── ecg_data/                   # Raw Zephyr CSVs here
 ```
 
-And participant info in project root:
+And participant info in project root data directory:
 ```
 MATB-Workload-Classification-Facial-Pose-Data/
-└── participant_info.csv            # Participant metadata here
+└── data/
+    └── participant_info.csv            # Participant metadata here
 ```
 
 No configuration needed - the pipeline will use these default paths.

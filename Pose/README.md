@@ -1,8 +1,71 @@
 # Facial Pose Analysis Pipeline
 
-Modular pipeline for processing facial pose data from OpenPose landmark detection, extracting features, and computing linear metrics including velocity and acceleration statistics.
+Processes facial landmark data to extract features related to head movement, eye blinking, and facial expressions during cognitive workload tasks.
 
-## Overview
+## What This Does (Simple Explanation)
+
+This pipeline takes raw data about where facial landmarks (like eye corners, nose tip, mouth edges) are located in video frames and converts it into meaningful measurements like:
+- How much the head is moving or rotating
+- How open/closed the eyes are (blinking)
+- How the mouth changes shape
+- How fast these movements happen
+
+These measurements can reveal changes in behavior under different workload conditions.
+
+## Pipeline Overview Diagram
+
+```
+Raw OpenPose CSV Files (70 facial landmarks per frame)
+           │
+           ▼
+    ┌──────────────────┐
+    │ 1. Load Data     │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 2. Filter to     │
+    │    Relevant      │
+    │    Landmarks     │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 3. Mask Low      │
+    │    Confidence    │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 4. Interpolate   │
+    │    & Filter      │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 5. Normalize     │
+    │    Coordinates   │
+    └────────┬─────────┘
+             │
+    ┌────────▼─────────┐
+    │ 6. Build         │
+    │    Templates     │
+    └────────┬─────────┘
+             │
+    ┌────────▼──────────────────────────────┐
+    │ 7. Extract Features (3 approaches)    │
+    │    - Original (no alignment)          │
+    │    - Procrustes Global (all pts)      │
+    │    - Procrustes Participant (per pt)  │
+    └────────┬──────────────────────────────┘
+             │
+    ┌────────▼─────────┐
+    │ 8. Compute       │
+    │    Statistics    │
+    │    (vel, acc)    │
+    └────────┬─────────┘
+             │
+             ▼
+    Features Ready for Analysis
+```
+
+## Technical Overview
 
 This pipeline processes raw OpenPose CSV files through 8 sequential steps:
 
@@ -53,8 +116,6 @@ Pose/
 │   │   ├── features/               # Step 7: Windowed and per-frame features
 │   │   ├── linear_metrics/         # Step 8: Linear metrics with derivatives
 │   │   └── processing_summary.json # Processing metadata and statistics
-│   │
-│   └── participant_info.csv        # Participant metadata with condition mapping
 │
 └── pose_stats_figures.ipynb        # Statistical analysis and visualization notebook
 ```
@@ -78,22 +139,23 @@ Pose/
 
 ### Participant Info File
 
-**Location**: `data/participant_info.csv`
+**Location**: `../data/participant_info.csv` (project root data directory)
 
 **Required columns**:
-- `participant`: Participant ID (e.g., 3101)
-- `trial_1`, `trial_2`, `trial_3`: Condition codes for each trial
+- `Participant ID`: Participant ID (e.g., 3101)
+- `session01`, `session02`, `session03`: Condition codes for each session
 
 **Condition codes**: L (Low), M (Moderate), H (High)
 
 **Example**:
 ```
-participant,trial_1,trial_2,trial_3
+Participant ID,session01,session02,session03
 3101,L,M,H
-3102,M,H,L
+3102,L,M,H
+3103,L,M,H
 ```
 
-This file maps trial numbers to experimental conditions. The pipeline uses this to generate condition-based output filenames (e.g., `3101_L_norm.csv` instead of `3101_01_norm.csv`).
+This file maps session numbers to experimental conditions. The pipeline uses this to generate condition-based output filenames (e.g., `3101_L_norm.csv` instead of `3101_01_norm.csv`).
 
 ## Output Structure
 

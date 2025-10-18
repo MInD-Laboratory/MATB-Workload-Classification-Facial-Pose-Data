@@ -1,0 +1,87 @@
+{
+  "name": "eye_gsr",
+  "config": {
+    "n_seeds": 20,
+    "feature_selection": "backward",
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "include_order": false,
+    "normalize_features": true,
+    "class_config": "all",
+    "use_pca": false,
+    "pca_variance": 0.9,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "name": "eye_gsr",
+    "feature_groups": [
+      "eye_tracking",
+      "gsr"
+    ],
+    "split_strategy": "random"
+  },
+  "metrics": {
+    "test_acc_mean": 0.691329479768786,
+    "test_acc_std": 0.023936058432468002,
+    "test_bal_acc_mean": 0.6921080077330078,
+    "test_bal_acc_std": 0.023919277380806188,
+    "test_f1_mean": 0.6907563656126074,
+    "test_f1_std": 0.024106158511860203,
+    "test_kappa_mean": 0.537048658469844,
+    "test_kappa_std": 0.03593397245829899,
+    "test_precision_L_mean": 0.7130045535566368,
+    "test_precision_L_std": 0.03091017546214388,
+    "test_recall_L_mean": 0.7459821428571427,
+    "test_recall_L_std": 0.04121979983571294,
+    "test_f1_L_mean": 0.7285368849765727,
+    "test_f1_L_std": 0.029625245206978644,
+    "test_precision_M_mean": 0.6882327391907542,
+    "test_precision_M_std": 0.028874005688416058,
+    "test_recall_M_mean": 0.655128205128205,
+    "test_recall_M_std": 0.04876685441370161,
+    "test_f1_M_mean": 0.6707066618824362,
+    "test_f1_M_std": 0.03568230216561554,
+    "test_precision_H_mean": 0.6753883300888006,
+    "test_precision_H_std": 0.045787053570987626,
+    "test_recall_H_mean": 0.6752136752136751,
+    "test_recall_H_std": 0.0296077061122885,
+    "test_f1_H_mean": 0.674640102088385,
+    "test_f1_H_std": 0.032052694896752484
+  },
+  "confusion_matrix": [
+    [
+      74.59821428571426,
+      11.874999999999998,
+      13.526785714285714
+    ],
+    [
+      14.658119658119656,
+      65.51282051282051,
+      19.829059829059833
+    ],
+    [
+      14.188034188034186,
+      18.29059829059829,
+      67.52136752136752
+    ]
+  ],
+  "selected_features": [
+    "pct_missing",
+    "mean_vel",
+    "max_vel",
+    "rms_disp",
+    "fix_mean_dur",
+    "fix_rate",
+    "blink_mean_dur",
+    "blink_rate",
+    "sac_rate",
+    "SCR_Peaks_N",
+    "SCR_Peaks_Amplitude_Mean",
+    "EDA_Tonic_SD"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 12,
+  "n_seeds": 20,
+  "timestamp": "2025-10-18T10:59:36.272217"
+}

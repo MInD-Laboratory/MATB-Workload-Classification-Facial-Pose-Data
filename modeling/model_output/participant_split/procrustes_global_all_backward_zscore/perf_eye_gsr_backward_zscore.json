@@ -1,0 +1,92 @@
+{
+  "name": "perf_eye_gsr",
+  "config": {
+    "n_seeds": 20,
+    "feature_selection": "backward",
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "include_order": false,
+    "normalize_features": true,
+    "class_config": "all",
+    "use_pca": false,
+    "pca_variance": 0.9,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "name": "perf_eye_gsr",
+    "feature_groups": [
+      "performance",
+      "eye_tracking",
+      "gsr"
+    ],
+    "split_strategy": "participant"
+  },
+  "metrics": {
+    "test_acc_mean": 0.7102603057145256,
+    "test_acc_std": 0.03884357644159623,
+    "test_bal_acc_mean": 0.7106026688691749,
+    "test_bal_acc_std": 0.038448407622175315,
+    "test_f1_mean": 0.7108880831672775,
+    "test_f1_std": 0.0412607146373557,
+    "test_kappa_mean": 0.5648496979347353,
+    "test_kappa_std": 0.058080149619386186,
+    "test_precision_L_mean": 0.8439718446504137,
+    "test_precision_L_std": 0.07902984849445395,
+    "test_recall_L_mean": 0.7476198642929051,
+    "test_recall_L_std": 0.039068423054044406,
+    "test_f1_L_mean": 0.7900450946722433,
+    "test_f1_L_std": 0.036632569206720485,
+    "test_precision_M_mean": 0.5961780974361569,
+    "test_precision_M_std": 0.048016448951085984,
+    "test_recall_M_mean": 0.6852018644207399,
+    "test_recall_M_std": 0.13037955322705225,
+    "test_f1_M_mean": 0.6298647802052142,
+    "test_f1_M_std": 0.06324401269733075,
+    "test_precision_H_mean": 0.7612498189280282,
+    "test_precision_H_std": 0.09066570931454443,
+    "test_recall_H_mean": 0.6989862778938795,
+    "test_recall_H_std": 0.13938004227326442,
+    "test_f1_H_mean": 0.7144978821335194,
+    "test_f1_H_std": 0.0703939359454075
+  },
+  "confusion_matrix": [
+    [
+      74.7619864292905,
+      20.93885644660888,
+      4.299157124100601
+    ],
+    [
+      10.958777020686203,
+      68.52018644207399,
+      20.521036537239798
+    ],
+    [
+      3.18373810770543,
+      26.917634102906618,
+      69.89862778938794
+    ]
+  ],
+  "selected_features": [
+    "sysmon_failure_rate",
+    "sysmon_average_reaction_times",
+    "track_failure_rate",
+    "resman_failure_rate",
+    "average_accuracy",
+    "average_reaction_time",
+    "mean_vel",
+    "max_vel",
+    "rms_disp",
+    "fix_mean_dur",
+    "blink_mean_dur",
+    "blink_rate",
+    "sac_rate",
+    "t_end_sec",
+    "SCR_Peaks_Amplitude_Mean",
+    "EDA_Tonic_SD"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 16,
+  "n_seeds": 20,
+  "timestamp": "2025-10-18T12:44:58.007833"
+}

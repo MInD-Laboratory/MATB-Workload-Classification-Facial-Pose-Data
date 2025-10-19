@@ -1,0 +1,91 @@
+{
+  "name": "perf_eye",
+  "config": {
+    "n_seeds": 20,
+    "feature_selection": "backward",
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "include_order": false,
+    "normalize_features": true,
+    "class_config": "all",
+    "use_pca": false,
+    "pca_variance": 0.9,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "name": "perf_eye",
+    "feature_groups": [
+      "performance",
+      "eye_tracking"
+    ],
+    "split_strategy": "participant"
+  },
+  "metrics": {
+    "test_acc_mean": 0.690662206799401,
+    "test_acc_std": 0.047342903372335744,
+    "test_bal_acc_mean": 0.6908382393470233,
+    "test_bal_acc_std": 0.047213175885702174,
+    "test_f1_mean": 0.6902359605858954,
+    "test_f1_std": 0.048443490991403354,
+    "test_kappa_mean": 0.5350624702550777,
+    "test_kappa_std": 0.07127823145318686,
+    "test_precision_L_mean": 0.8264338163117078,
+    "test_precision_L_std": 0.08867482683771874,
+    "test_recall_L_mean": 0.716319374118797,
+    "test_recall_L_std": 0.03209161697835349,
+    "test_f1_L_mean": 0.7647553520259812,
+    "test_f1_L_std": 0.041541048303949876,
+    "test_precision_M_mean": 0.5986626510656075,
+    "test_precision_M_std": 0.05918329254321776,
+    "test_recall_M_mean": 0.6074124612931038,
+    "test_recall_M_std": 0.11900089867423569,
+    "test_f1_M_mean": 0.5964121643614366,
+    "test_f1_M_std": 0.06985531393640972,
+    "test_precision_H_mean": 0.6933867263354143,
+    "test_precision_H_std": 0.06796199222022263,
+    "test_recall_H_mean": 0.748782882629169,
+    "test_recall_H_std": 0.12072355678649849,
+    "test_f1_H_mean": 0.712905467366352,
+    "test_f1_H_std": 0.06350216233152506
+  },
+  "confusion_matrix": [
+    [
+      71.6319374118797,
+      22.22913168625916,
+      6.138930901861147
+    ],
+    [
+      10.385241193942246,
+      60.74124612931039,
+      28.873512676747374
+    ],
+    [
+      4.8926989541921895,
+      20.22901278289091,
+      74.87828826291693
+    ]
+  ],
+  "selected_features": [
+    "sysmon_failure_rate",
+    "sysmon_average_reaction_times",
+    "comms_average_reaction_times",
+    "track_failure_rate",
+    "resman_failure_rate",
+    "average_accuracy",
+    "average_reaction_time",
+    "pct_missing",
+    "mean_vel",
+    "max_vel",
+    "rms_disp",
+    "fix_mean_dur",
+    "fix_rate",
+    "blink_mean_dur",
+    "blink_rate",
+    "sac_rate"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 16,
+  "n_seeds": 20,
+  "timestamp": "2025-10-18T12:19:57.987151"
+}

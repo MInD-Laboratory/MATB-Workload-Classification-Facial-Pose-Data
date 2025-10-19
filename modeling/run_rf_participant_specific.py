@@ -155,7 +155,7 @@ Method:
     parser.add_argument(
         "--strategy",
         choices=["stratified", "temporal_stratified"],
-        default="stratified",
+        default="temporal_stratified",
         help="Sampling strategy: 'stratified' (random N per condition) or 'temporal_stratified' (first N in time per condition with buffer)"
     )
 

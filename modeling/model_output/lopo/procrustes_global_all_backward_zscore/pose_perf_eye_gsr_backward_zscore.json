@@ -1,0 +1,1421 @@
+{
+  "name": "pose_perf_eye_gsr",
+  "config": {
+    "n_seeds": 20,
+    "feature_selection": "backward",
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "include_order": false,
+    "normalize_features": true,
+    "class_config": "all",
+    "use_pca": false,
+    "pca_variance": 0.9,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "name": "pose_perf_eye_gsr",
+    "feature_groups": [
+      "pose",
+      "performance",
+      "eye_tracking",
+      "gsr"
+    ],
+    "split_strategy": "lopo"
+  },
+  "metrics": {
+    "test_acc_mean": 0.6641030620770756,
+    "test_acc_std": 0.11232078263947286,
+    "test_bal_acc_mean": 0.6617743645243646,
+    "test_bal_acc_std": 0.11229983747818047,
+    "test_f1_mean": 0.6313060792946397,
+    "test_f1_std": 0.13606434751826482,
+    "test_kappa_mean": 0.4888814483803351,
+    "test_kappa_std": 0.17243159142435335
+  },
+  "confusion_matrix": [
+    [
+      74.0767857142857,
+      16.650297619047617,
+      6.772916666666665
+    ],
+    [
+      22.99521103896104,
+      52.833658008658006,
+      24.171130952380953
+    ],
+    [
+      8.006322843822842,
+      21.85931152181152,
+      70.13436563436562
+    ]
+  ],
+  "participant_results": [
+    {
+      "participant": "3208",
+      "n_seeds": 20,
+      "test_acc_mean": 0.5144444444444444,
+      "test_acc_std": 0.0180606155752722,
+      "test_bal_acc_mean": 0.5144444444444444,
+      "test_bal_acc_std": 0.01806061557527221,
+      "test_f1_mean": 0.43520013542392066,
+      "test_f1_std": 0.030256744554071038,
+      "test_kappa_mean": 0.27166666666666667,
+      "test_kappa_std": 0.02709092336290831,
+      "confusion_matrix": [
+        [
+          53.33333333333335,
+          46.66666666666665,
+          0.0
+        ],
+        [
+          0.0,
+          99.0,
+          1.0
+        ],
+        [
+          0.33333333333333337,
+          97.66666666666666,
+          2.0
+        ]
+      ]
+    },
+    {
+      "participant": "3209",
+      "n_seeds": 20,
+      "test_acc_mean": 0.575,
+      "test_acc_std": 0.05113968622911178,
+      "test_bal_acc_mean": 0.5844444444444443,
+      "test_bal_acc_std": 0.05000324875735372,
+      "test_f1_mean": 0.5406664870596848,
+      "test_f1_std": 0.06696292983484844,
+      "test_kappa_mean": 0.37079218836360617,
+      "test_kappa_std": 0.07477009188541271,
+      "confusion_matrix": [
+        [
+          55.999999999999986,
+          8.333333333333334,
+          35.666666666666664
+        ],
+        [
+          0.0,
+          19.333333333333332,
+          80.66666666666667
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3210",
+      "n_seeds": 20,
+      "test_acc_mean": 0.595,
+      "test_acc_std": 0.043629219245017704,
+      "test_bal_acc_mean": 0.595,
+      "test_bal_acc_std": 0.043629219245017704,
+      "test_f1_mean": 0.5215302154559446,
+      "test_f1_std": 0.07263347273022203,
+      "test_kappa_mean": 0.2200281036168133,
+      "test_kappa_std": 0.08112965538481955,
+      "confusion_matrix": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          7.666666666666669,
+          18.999999999999996,
+          73.33333333333333
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3214",
+      "n_seeds": 20,
+      "test_acc_mean": 0.8222222222222223,
+      "test_acc_std": 0.02039250967738326,
+      "test_bal_acc_mean": 0.8222222222222223,
+      "test_bal_acc_std": 0.020392509677383274,
+      "test_f1_mean": 0.8192726953223548,
+      "test_f1_std": 0.021339360861197275,
+      "test_kappa_mean": 0.7333333333333334,
+      "test_kappa_std": 0.030588764516074868,
+      "confusion_matrix": [
+        [
+          87.66666666666669,
+          5.666666666666668,
+          6.666666666666669
+        ],
+        [
+          0.0,
+          58.999999999999986,
+          41.0
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3215",
+      "n_seeds": 20,
+      "test_acc_mean": 0.6577777777777778,
+      "test_acc_std": 0.03633645389607234,
+      "test_bal_acc_mean": 0.6577777777777777,
+      "test_bal_acc_std": 0.036336453896072346,
+      "test_f1_mean": 0.6465896735305894,
+      "test_f1_std": 0.0445853240876762,
+      "test_kappa_mean": 0.48666666666666664,
+      "test_kappa_std": 0.054504680844108484,
+      "confusion_matrix": [
+        [
+          67.66666666666667,
+          24.333333333333332,
+          8.0
+        ],
+        [
+          16.333333333333336,
+          44.66666666666667,
+          39.0
+        ],
+        [
+          6.000000000000002,
+          9.000000000000002,
+          85.0
+        ]
+      ]
+    },
+    {
+      "participant": "3216",
+      "n_seeds": 20,
+      "test_acc_mean": 0.5325581395348837,
+      "test_acc_std": 0.02709970709891531,
+      "test_bal_acc_mean": 0.536068376068376,
+      "test_bal_acc_std": 0.028985112064269937,
+      "test_f1_mean": 0.4427334503004411,
+      "test_f1_std": 0.02677623548614936,
+      "test_kappa_mean": 0.291440274064524,
+      "test_kappa_std": 0.04205845442312621,
+      "confusion_matrix": [
+        [
+          99.33333333333334,
+          0.6666666666666667,
+          0.0
+        ],
+        [
+          99.66666666666666,
+          0.33333333333333337,
+          0.0
+        ],
+        [
+          32.69230769230769,
+          6.153846153846154,
+          61.153846153846146
+        ]
+      ]
+    },
+    {
+      "participant": "3217",
+      "n_seeds": 20,
+      "test_acc_mean": 0.7844444444444447,
+      "test_acc_std": 0.030673615620866426,
+      "test_bal_acc_mean": 0.7844444444444445,
+      "test_bal_acc_std": 0.030673615620866415,
+      "test_f1_mean": 0.7811221589979999,
+      "test_f1_std": 0.033587575774347955,
+      "test_kappa_mean": 0.6766666666666665,
+      "test_kappa_std": 0.04601042343129963,
+      "confusion_matrix": [
+        [
+          80.00000000000001,
+          7.0,
+          13.000000000000004
+        ],
+        [
+          4.0,
+          59.0,
+          37.0
+        ],
+        [
+          0.0,
+          3.6666666666666665,
+          96.33333333333334
+        ]
+      ]
+    },
+    {
+      "participant": "3218",
+      "n_seeds": 20,
+      "test_acc_mean": 0.8733333333333334,
+      "test_acc_std": 0.012694234901721736,
+      "test_bal_acc_mean": 0.8733333333333334,
+      "test_bal_acc_std": 0.012694234901721736,
+      "test_f1_mean": 0.8681930282452104,
+      "test_f1_std": 0.013874903005801943,
+      "test_kappa_mean": 0.8100000000000002,
+      "test_kappa_std": 0.019041352352582645,
+      "confusion_matrix": [
+        [
+          62.0,
+          37.33333333333333,
+          0.6666666666666667
+        ],
+        [
+          0.0,
+          100.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3219",
+      "n_seeds": 20,
+      "test_acc_mean": 0.7631578947368421,
+      "test_acc_std": 0.025613908599594098,
+      "test_bal_acc_mean": 0.7857142857142858,
+      "test_bal_acc_std": 0.023174488732966084,
+      "test_f1_mean": 0.7294945637838283,
+      "test_f1_std": 0.03859745993494327,
+      "test_kappa_mean": 0.6469592275635069,
+      "test_kappa_std": 0.037744213093143575,
+      "confusion_matrix": [
+        [
+          97.14285714285714,
+          2.8571428571428563,
+          0.0
+        ],
+        [
+          31.785714285714285,
+          38.57142857142857,
+          29.64285714285713
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3220",
+      "n_seeds": 20,
+      "test_acc_mean": 0.651111111111111,
+      "test_acc_std": 0.017806993537467352,
+      "test_bal_acc_mean": 0.651111111111111,
+      "test_bal_acc_std": 0.017806993537467366,
+      "test_f1_mean": 0.5501066701497737,
+      "test_f1_std": 0.014338073871072197,
+      "test_kappa_mean": 0.4766666666666667,
+      "test_kappa_std": 0.02671049030620105,
+      "confusion_matrix": [
+        [
+          95.99999999999999,
+          4.0,
+          0.0
+        ],
+        [
+          99.66666666666667,
+          0.33333333333333337,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          99.0
+        ]
+      ]
+    },
+    {
+      "participant": "3221",
+      "n_seeds": 20,
+      "test_acc_mean": 0.7411111111111112,
+      "test_acc_std": 0.026268964188413742,
+      "test_bal_acc_mean": 0.7411111111111113,
+      "test_bal_acc_std": 0.02626896418841374,
+      "test_f1_mean": 0.7472542258169261,
+      "test_f1_std": 0.025434261823131337,
+      "test_kappa_mean": 0.6116666666666666,
+      "test_kappa_std": 0.039403446282620644,
+      "confusion_matrix": [
+        [
+          66.0,
+          34.0,
+          0.0
+        ],
+        [
+          28.666666666666668,
+          71.33333333333333,
+          0.0
+        ],
+        [
+          0.0,
+          15.0,
+          85.0
+        ]
+      ]
+    },
+    {
+      "participant": "3222",
+      "n_seeds": 20,
+      "test_acc_mean": 0.8085365853658539,
+      "test_acc_std": 0.04425404771921703,
+      "test_bal_acc_mean": 0.8102020202020203,
+      "test_bal_acc_std": 0.03933446074860079,
+      "test_f1_mean": 0.8156152456287028,
+      "test_f1_std": 0.04154916116586968,
+      "test_kappa_mean": 0.7146738337355839,
+      "test_kappa_std": 0.06340735496895143,
+      "confusion_matrix": [
+        [
+          81.99999999999999,
+          18.000000000000004,
+          0.0
+        ],
+        [
+          17.272727272727273,
+          82.72727272727273,
+          0.0
+        ],
+        [
+          0.0,
+          21.666666666666668,
+          78.33333333333334
+        ]
+      ]
+    },
+    {
+      "participant": "3223",
+      "n_seeds": 20,
+      "test_acc_mean": 0.571111111111111,
+      "test_acc_std": 0.017806993537467352,
+      "test_bal_acc_mean": 0.571111111111111,
+      "test_bal_acc_std": 0.017806993537467408,
+      "test_f1_mean": 0.5197468943334821,
+      "test_f1_std": 0.027303667675756434,
+      "test_kappa_mean": 0.35666666666666674,
+      "test_kappa_std": 0.02671049030620105,
+      "confusion_matrix": [
+        [
+          56.33333333333335,
+          10.0,
+          33.666666666666664
+        ],
+        [
+          12.666666666666668,
+          15.000000000000004,
+          72.33333333333333
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3224",
+      "n_seeds": 20,
+      "test_acc_mean": 0.7916666666666669,
+      "test_acc_std": 0.08298171432478786,
+      "test_bal_acc_mean": 0.7785714285714287,
+      "test_bal_acc_std": 0.06950677474860735,
+      "test_f1_mean": 0.7848706476312223,
+      "test_f1_std": 0.09943995410054171,
+      "test_kappa_mean": 0.6504450947958536,
+      "test_kappa_std": 0.14117041791585005,
+      "confusion_matrix": [
+        [
+          75.0,
+          13.75,
+          11.25
+        ],
+        [
+          0.0,
+          86.07142857142858,
+          13.928571428571422
+        ],
+        [
+          4.166666666666666,
+          23.333333333333336,
+          72.50000000000001
+        ]
+      ]
+    },
+    {
+      "participant": "3225",
+      "n_seeds": 20,
+      "test_acc_mean": 0.5755555555555555,
+      "test_acc_std": 0.03875918218988361,
+      "test_bal_acc_mean": 0.5755555555555555,
+      "test_bal_acc_std": 0.03875918218988361,
+      "test_f1_mean": 0.5714389320532497,
+      "test_f1_std": 0.039713801122138175,
+      "test_kappa_mean": 0.36333333333333334,
+      "test_kappa_std": 0.058138773284825376,
+      "confusion_matrix": [
+        [
+          64.66666666666666,
+          35.33333333333333,
+          0.0
+        ],
+        [
+          25.333333333333332,
+          74.66666666666666,
+          0.0
+        ],
+        [
+          0.33333333333333337,
+          66.33333333333334,
+          33.333333333333336
+        ]
+      ]
+    },
+    {
+      "participant": "3226",
+      "n_seeds": 20,
+      "test_acc_mean": 0.49111111111111116,
+      "test_acc_std": 0.04777029725200754,
+      "test_bal_acc_mean": 0.49111111111111116,
+      "test_bal_acc_std": 0.04777029725200754,
+      "test_f1_mean": 0.40426102491611154,
+      "test_f1_std": 0.040065716494602714,
+      "test_kappa_mean": 0.23666666666666666,
+      "test_kappa_std": 0.07165544587801133,
+      "confusion_matrix": [
+        [
+          65.99999999999999,
+          29.666666666666664,
+          4.333333333333334
+        ],
+        [
+          18.666666666666664,
+          81.33333333333334,
+          0.0
+        ],
+        [
+          11.666666666666666,
+          88.33333333333333,
+          0.0
+        ]
+      ]
+    },
+    {
+      "participant": "3227",
+      "n_seeds": 20,
+      "test_acc_mean": 0.5322222222222222,
+      "test_acc_std": 0.07298517388851905,
+      "test_bal_acc_mean": 0.5322222222222222,
+      "test_bal_acc_std": 0.07298517388851904,
+      "test_f1_mean": 0.4978578062881406,
+      "test_f1_std": 0.08817313793445236,
+      "test_kappa_mean": 0.29833333333333334,
+      "test_kappa_std": 0.10947776083277858,
+      "confusion_matrix": [
+        [
+          90.66666666666666,
+          9.333333333333332,
+          0.0
+        ],
+        [
+          55.33333333333333,
+          44.66666666666666,
+          0.0
+        ],
+        [
+          2.6666666666666665,
+          73.0,
+          24.33333333333333
+        ]
+      ]
+    },
+    {
+      "participant": "3228",
+      "n_seeds": 20,
+      "test_acc_mean": 0.6666666666666667,
+      "test_acc_std": 0.03249431399253342,
+      "test_bal_acc_mean": 0.6649999999999998,
+      "test_bal_acc_std": 0.03043436893079476,
+      "test_f1_mean": 0.6562290987495983,
+      "test_f1_std": 0.03389359330236422,
+      "test_kappa_mean": 0.4541993941742102,
+      "test_kappa_std": 0.0535247386761995,
+      "confusion_matrix": [
+        [
+          65.83333333333331,
+          6.666666666666664,
+          27.49999999999999
+        ],
+        [
+          0.0,
+          44.33333333333333,
+          55.666666666666664
+        ],
+        [
+          0.0,
+          10.666666666666668,
+          89.33333333333333
+        ]
+      ]
+    },
+    {
+      "participant": "3229",
+      "n_seeds": 20,
+      "test_acc_mean": 0.7455555555555555,
+      "test_acc_std": 0.04044907113180228,
+      "test_bal_acc_mean": 0.7455555555555555,
+      "test_bal_acc_std": 0.040449071131802294,
+      "test_f1_mean": 0.7359057365789164,
+      "test_f1_std": 0.04473451703029465,
+      "test_kappa_mean": 0.6183333333333333,
+      "test_kappa_std": 0.060673606697703455,
+      "confusion_matrix": [
+        [
+          66.66666666666666,
+          31.333333333333325,
+          2.0
+        ],
+        [
+          27.333333333333332,
+          56.999999999999986,
+          15.666666666666666
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3230",
+      "n_seeds": 20,
+      "test_acc_mean": 0.8455555555555557,
+      "test_acc_std": 0.016870103433694415,
+      "test_bal_acc_mean": 0.8455555555555557,
+      "test_bal_acc_std": 0.016870103433694383,
+      "test_f1_mean": 0.8413143485929833,
+      "test_f1_std": 0.017544826437839188,
+      "test_kappa_mean": 0.7683333333333332,
+      "test_kappa_std": 0.025305155150541606,
+      "confusion_matrix": [
+        [
+          100.0,
+          0.0,
+          0.0
+        ],
+        [
+          21.000000000000004,
+          65.33333333333333,
+          13.666666666666668
+        ],
+        [
+          11.666666666666668,
+          0.0,
+          88.33333333333334
+        ]
+      ]
+    },
+    {
+      "participant": "3231",
+      "n_seeds": 20,
+      "test_acc_mean": 0.6155555555555555,
+      "test_acc_std": 0.017806993537467383,
+      "test_bal_acc_mean": 0.6155555555555555,
+      "test_bal_acc_std": 0.017806993537467373,
+      "test_f1_mean": 0.5894397511228053,
+      "test_f1_std": 0.022252574429770838,
+      "test_kappa_mean": 0.42333333333333345,
+      "test_kappa_std": 0.02671049030620105,
+      "confusion_matrix": [
+        [
+          49.66666666666667,
+          29.333333333333325,
+          20.999999999999996
+        ],
+        [
+          12.000000000000002,
+          35.0,
+          53.000000000000014
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3232",
+      "n_seeds": 20,
+      "test_acc_mean": 0.7188888888888887,
+      "test_acc_std": 0.013047621080275518,
+      "test_bal_acc_mean": 0.7188888888888888,
+      "test_bal_acc_std": 0.013047621080275556,
+      "test_f1_mean": 0.6866118945300127,
+      "test_f1_std": 0.014970573892050039,
+      "test_kappa_mean": 0.5783333333333333,
+      "test_kappa_std": 0.01957143162041333,
+      "confusion_matrix": [
+        [
+          83.33333333333334,
+          8.333333333333332,
+          8.333333333333334
+        ],
+        [
+          21.0,
+          32.33333333333333,
+          46.66666666666666
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3233",
+      "n_seeds": 20,
+      "test_acc_mean": 0.5011111111111111,
+      "test_acc_std": 0.02743057868827213,
+      "test_bal_acc_mean": 0.5011111111111111,
+      "test_bal_acc_std": 0.027430578688272134,
+      "test_f1_mean": 0.4086470925205338,
+      "test_f1_std": 0.028339611664760463,
+      "test_kappa_mean": 0.25166666666666665,
+      "test_kappa_std": 0.04114586803240822,
+      "confusion_matrix": [
+        [
+          98.99999999999999,
+          1.0,
+          0.0
+        ],
+        [
+          48.66666666666667,
+          51.333333333333336,
+          0.0
+        ],
+        [
+          94.0,
+          6.000000000000001,
+          0.0
+        ]
+      ]
+    },
+    {
+      "participant": "3234",
+      "n_seeds": 20,
+      "test_acc_mean": 0.6488888888888887,
+      "test_acc_std": 0.03272346575740545,
+      "test_bal_acc_mean": 0.6488888888888887,
+      "test_bal_acc_std": 0.032723465757405444,
+      "test_f1_mean": 0.6150404032011403,
+      "test_f1_std": 0.028458855840335726,
+      "test_kappa_mean": 0.47333333333333333,
+      "test_kappa_std": 0.0490851986361082,
+      "confusion_matrix": [
+        [
+          94.0,
+          6.0,
+          0.0
+        ],
+        [
+          27.0,
+          72.99999999999999,
+          0.0
+        ],
+        [
+          39.333333333333336,
+          32.99999999999999,
+          27.666666666666668
+        ]
+      ]
+    },
+    {
+      "participant": "3235",
+      "n_seeds": 20,
+      "test_acc_mean": 0.7124999999999999,
+      "test_acc_std": 0.02363613360211951,
+      "test_bal_acc_mean": 0.7172222222222222,
+      "test_bal_acc_std": 0.023221790802468747,
+      "test_f1_mean": 0.6545872467511731,
+      "test_f1_std": 0.03774769265763321,
+      "test_kappa_mean": 0.5699365571517023,
+      "test_kappa_std": 0.035235971381171155,
+      "confusion_matrix": [
+        [
+          92.50000000000003,
+          0.0,
+          7.499999999999997
+        ],
+        [
+          35.0,
+          22.66666666666667,
+          42.33333333333333
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3236",
+      "n_seeds": 20,
+      "test_acc_mean": 0.7364864864864865,
+      "test_acc_std": 0.017261253342121766,
+      "test_bal_acc_mean": 0.6817460317460317,
+      "test_bal_acc_std": 0.014192586081300095,
+      "test_f1_mean": 0.7294485209191092,
+      "test_f1_std": 0.01738863079338262,
+      "test_kappa_mean": 0.5865751352742995,
+      "test_kappa_std": 0.025586250558414483,
+      "confusion_matrix": [
+        [
+          61.666666666666664,
+          28.666666666666668,
+          9.666666666666668
+        ],
+        [
+          14.285714285714281,
+          42.85714285714286,
+          42.85714285714286
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3237",
+      "n_seeds": 20,
+      "test_acc_mean": 0.5892857142857142,
+      "test_acc_std": 0.03694617290176835,
+      "test_bal_acc_mean": 0.5583333333333335,
+      "test_bal_acc_std": 0.03838436301720426,
+      "test_f1_mean": 0.5519331149647219,
+      "test_f1_std": 0.04245949760322381,
+      "test_kappa_mean": 0.3727301379461164,
+      "test_kappa_std": 0.05639379444209759,
+      "confusion_matrix": [
+        [
+          61.999999999999986,
+          36.33333333333333,
+          1.6666666666666667
+        ],
+        [
+          52.083333333333336,
+          12.499999999999998,
+          35.416666666666664
+        ],
+        [
+          6.666666666666669,
+          0.33333333333333337,
+          92.99999999999997
+        ]
+      ]
+    },
+    {
+      "participant": "3238",
+      "n_seeds": 20,
+      "test_acc_mean": 0.8566666666666668,
+      "test_acc_std": 0.05789237398450727,
+      "test_bal_acc_mean": 0.8566666666666668,
+      "test_bal_acc_std": 0.05789237398450728,
+      "test_f1_mean": 0.8453427998781177,
+      "test_f1_std": 0.06811908762024177,
+      "test_kappa_mean": 0.7849999999999999,
+      "test_kappa_std": 0.08683856097676089,
+      "confusion_matrix": [
+        [
+          94.99999999999997,
+          2.0,
+          3.0
+        ],
+        [
+          23.666666666666664,
+          62.0,
+          14.333333333333332
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3239",
+      "n_seeds": 20,
+      "test_acc_mean": 0.67125,
+      "test_acc_std": 0.02599974696233143,
+      "test_bal_acc_mean": 0.6177200577200577,
+      "test_bal_acc_std": 0.025781103401498598,
+      "test_f1_mean": 0.5754242060470585,
+      "test_f1_std": 0.03106244403193929,
+      "test_kappa_mean": 0.4856821307726203,
+      "test_kappa_std": 0.04117528122297488,
+      "confusion_matrix": [
+        [
+          94.66666666666666,
+          5.333333333333334,
+          0.0
+        ],
+        [
+          10.71428571428571,
+          89.28571428571429,
+          0.0
+        ],
+        [
+          17.727272727272727,
+          80.9090909090909,
+          1.3636363636363638
+        ]
+      ]
+    },
+    {
+      "participant": "3240",
+      "n_seeds": 20,
+      "test_acc_mean": 0.7837209302325581,
+      "test_acc_std": 0.022760952787422913,
+      "test_bal_acc_mean": 0.7788095238095238,
+      "test_bal_acc_std": 0.023130243304144246,
+      "test_f1_mean": 0.7875191915203358,
+      "test_f1_std": 0.022287461719406782,
+      "test_kappa_mean": 0.6729968353926025,
+      "test_kappa_std": 0.03459085093141035,
+      "confusion_matrix": [
+        [
+          69.2857142857143,
+          30.71428571428571,
+          0.0
+        ],
+        [
+          1.0,
+          99.0,
+          0.0
+        ],
+        [
+          0.0,
+          34.64285714285713,
+          65.35714285714286
+        ]
+      ]
+    },
+    {
+      "participant": "3241",
+      "n_seeds": 20,
+      "test_acc_mean": 0.5788888888888888,
+      "test_acc_std": 0.05606781376236252,
+      "test_bal_acc_mean": 0.5788888888888888,
+      "test_bal_acc_std": 0.05606781376236255,
+      "test_f1_mean": 0.5554887202820605,
+      "test_f1_std": 0.062328135847460636,
+      "test_kappa_mean": 0.36833333333333335,
+      "test_kappa_std": 0.08410172064354378,
+      "confusion_matrix": [
+        [
+          94.66666666666666,
+          5.333333333333334,
+          0.0
+        ],
+        [
+          46.333333333333336,
+          53.333333333333336,
+          0.33333333333333337
+        ],
+        [
+          72.66666666666666,
+          1.6666666666666667,
+          25.666666666666664
+        ]
+      ]
+    },
+    {
+      "participant": "3242",
+      "n_seeds": 20,
+      "test_acc_mean": 0.5122222222222221,
+      "test_acc_std": 0.004969039949999541,
+      "test_bal_acc_mean": 0.5122222222222222,
+      "test_bal_acc_std": 0.004969039949999515,
+      "test_f1_mean": 0.45235105986781365,
+      "test_f1_std": 0.00564955677311466,
+      "test_kappa_mean": 0.26833333333333337,
+      "test_kappa_std": 0.007453559924999299,
+      "confusion_matrix": [
+        [
+          46.999999999999986,
+          19.333333333333336,
+          33.66666666666667
+        ],
+        [
+          0.0,
+          6.666666666666669,
+          93.3333333333333
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3243",
+      "n_seeds": 20,
+      "test_acc_mean": 0.5397727272727273,
+      "test_acc_std": 0.024316448983559967,
+      "test_bal_acc_mean": 0.5409523809523809,
+      "test_bal_acc_std": 0.02492034225519766,
+      "test_f1_mean": 0.4587948291963051,
+      "test_f1_std": 0.03452624152912401,
+      "test_kappa_mean": 0.3062172053018006,
+      "test_kappa_std": 0.03706666482139227,
+      "confusion_matrix": [
+        [
+          59.28571428571429,
+          40.71428571428571,
+          0.0
+        ],
+        [
+          0.0,
+          100.0,
+          0.0
+        ],
+        [
+          0.0,
+          96.99999999999999,
+          2.9999999999999996
+        ]
+      ]
+    },
+    {
+      "participant": "3244",
+      "n_seeds": 20,
+      "test_acc_mean": 0.5722222222222222,
+      "test_acc_std": 0.04495322816602951,
+      "test_bal_acc_mean": 0.5722222222222222,
+      "test_bal_acc_std": 0.04495322816602951,
+      "test_f1_mean": 0.5810687624054124,
+      "test_f1_std": 0.044322402279676744,
+      "test_kappa_mean": 0.35833333333333334,
+      "test_kappa_std": 0.06742984224904425,
+      "confusion_matrix": [
+        [
+          59.666666666666664,
+          40.33333333333333,
+          0.0
+        ],
+        [
+          28.666666666666664,
+          64.66666666666666,
+          6.666666666666667
+        ],
+        [
+          2.6666666666666665,
+          50.00000000000001,
+          47.33333333333333
+        ]
+      ]
+    },
+    {
+      "participant": "3245",
+      "n_seeds": 20,
+      "test_acc_mean": 0.6104651162790696,
+      "test_acc_std": 0.026000790436044068,
+      "test_bal_acc_mean": 0.6277777777777777,
+      "test_bal_acc_std": 0.024845199749997673,
+      "test_f1_mean": 0.5778336972941747,
+      "test_f1_std": 0.02956170485661977,
+      "test_kappa_mean": 0.42685091701580397,
+      "test_kappa_std": 0.03788122004446593,
+      "confusion_matrix": [
+        [
+          69.33333333333333,
+          22.999999999999996,
+          7.666666666666666
+        ],
+        [
+          0.0,
+          19.0,
+          81.0
+        ],
+        [
+          0.0,
+          0.0,
+          100.0
+        ]
+      ]
+    },
+    {
+      "participant": "3246",
+      "n_seeds": 20,
+      "test_acc_mean": 0.662222222222222,
+      "test_acc_std": 0.03647923029636102,
+      "test_bal_acc_mean": 0.662222222222222,
+      "test_bal_acc_std": 0.03647923029636106,
+      "test_f1_mean": 0.6326693438770953,
+      "test_f1_std": 0.04234960872939888,
+      "test_kappa_mean": 0.49333333333333335,
+      "test_kappa_std": 0.05471884544454154,
+      "confusion_matrix": [
+        [
+          77.66666666666666,
+          3.333333333333333,
+          18.999999999999996
+        ],
+        [
+          0.6666666666666667,
+          24.333333333333332,
+          75.0
+        ],
+        [
+          3.3333333333333335,
+          0.0,
+          96.66666666666666
+        ]
+      ]
+    },
+    {
+      "participant": "3247",
+      "n_seeds": 20,
+      "test_acc_mean": 0.6922222222222221,
+      "test_acc_std": 0.03833778260474557,
+      "test_bal_acc_mean": 0.6922222222222221,
+      "test_bal_acc_std": 0.0383377826047456,
+      "test_f1_mean": 0.6967904036133012,
+      "test_f1_std": 0.03695380472828748,
+      "test_kappa_mean": 0.5383333333333333,
+      "test_kappa_std": 0.057506673907118375,
+      "confusion_matrix": [
+        [
+          80.33333333333331,
+          19.66666666666667,
+          0.0
+        ],
+        [
+          29.333333333333332,
+          69.66666666666666,
+          1.0
+        ],
+        [
+          1.0,
+          41.33333333333333,
+          57.66666666666667
+        ]
+      ]
+    },
+    {
+      "participant": "3248",
+      "n_seeds": 20,
+      "test_acc_mean": 0.6625000000000001,
+      "test_acc_std": 0.030647464375381513,
+      "test_bal_acc_mean": 0.6678571428571428,
+      "test_bal_acc_std": 0.029917582261858377,
+      "test_f1_mean": 0.6492671196756851,
+      "test_f1_std": 0.04020444752321284,
+      "test_kappa_mean": 0.4973975667110312,
+      "test_kappa_std": 0.045027231709861004,
+      "confusion_matrix": [
+        [
+          90.35714285714286,
+          9.642857142857139,
+          0.0
+        ],
+        [
+          67.33333333333333,
+          32.666666666666664,
+          0.0
+        ],
+        [
+          7.666666666666667,
+          15.0,
+          77.33333333333333
+        ]
+      ]
+    },
+    {
+      "participant": "3249",
+      "n_seeds": 20,
+      "test_acc_mean": 0.5311111111111111,
+      "test_acc_std": 0.0387591821898836,
+      "test_bal_acc_mean": 0.5311111111111112,
+      "test_bal_acc_std": 0.03875918218988361,
+      "test_f1_mean": 0.4700477230761081,
+      "test_f1_std": 0.041578713823372075,
+      "test_kappa_mean": 0.2966666666666667,
+      "test_kappa_std": 0.05813877328482541,
+      "confusion_matrix": [
+        [
+          86.99999999999999,
+          13.0,
+          0.0
+        ],
+        [
+          36.66666666666667,
+          63.333333333333336,
+          0.0
+        ],
+        [
+          0.33333333333333337,
+          90.66666666666666,
+          9.0
+        ]
+      ]
+    },
+    {
+      "participant": "3250",
+      "n_seeds": 20,
+      "test_acc_mean": 0.8300000000000001,
+      "test_acc_std": 0.014907119849998596,
+      "test_bal_acc_mean": 0.8300000000000001,
+      "test_bal_acc_std": 0.01490711984999857,
+      "test_f1_mean": 0.8245342521835439,
+      "test_f1_std": 0.01520757993915053,
+      "test_kappa_mean": 0.7450000000000001,
+      "test_kappa_std": 0.02236067977499787,
+      "confusion_matrix": [
+        [
+          64.33333333333334,
+          18.999999999999996,
+          16.666666666666664
+        ],
+        [
+          0.0,
+          98.0,
+          2.0
+        ],
+        [
+          5.333333333333334,
+          8.0,
+          86.66666666666669
+        ]
+      ]
+    }
+  ],
+  "selected_features": [
+    "head_rotation_rad_min",
+    "head_rotation_rad_max",
+    "head_rotation_rad_rms",
+    "head_rotation_rad_std",
+    "head_rotation_rad_median",
+    "head_rotation_rad_p25",
+    "head_rotation_rad_p75",
+    "head_rotation_rad_autocorr1",
+    "head_tx_max",
+    "head_tx_rms",
+    "head_tx_std",
+    "head_tx_median",
+    "head_tx_p25",
+    "head_tx_p75",
+    "head_tx_autocorr1",
+    "head_ty_min",
+    "head_ty_max",
+    "head_ty_rms",
+    "head_ty_std",
+    "head_ty_p75",
+    "head_ty_autocorr1",
+    "head_scalex_min",
+    "head_scalex_rms",
+    "head_scalex_p75",
+    "head_scalex_autocorr1",
+    "head_scaley_min",
+    "head_scaley_max",
+    "head_scaley_std",
+    "head_scaley_p75",
+    "head_scaley_autocorr1",
+    "head_motion_mag_min",
+    "head_motion_mag_rms",
+    "head_motion_mag_p75",
+    "head_motion_mag_autocorr1",
+    "blink_aperture_min",
+    "blink_aperture_max",
+    "blink_aperture_std",
+    "blink_aperture_p25",
+    "blink_aperture_p75",
+    "mouth_aperture_min",
+    "mouth_aperture_max",
+    "mouth_aperture_mean",
+    "mouth_aperture_std",
+    "mouth_aperture_median",
+    "mouth_aperture_p25",
+    "mouth_aperture_p75",
+    "mouth_aperture_autocorr1",
+    "pupil_dx_max",
+    "pupil_dx_mean",
+    "pupil_dx_p25",
+    "pupil_dx_p75",
+    "pupil_dy_max",
+    "pupil_dy_mean",
+    "pupil_dy_median",
+    "pupil_dy_p25",
+    "pupil_dy_p75",
+    "pupil_metric_min",
+    "pupil_metric_mean",
+    "pupil_metric_p25",
+    "pupil_metric_p75",
+    "pupil_metric_autocorr1",
+    "head_rotation_rad_vel_min",
+    "head_rotation_rad_vel_max",
+    "head_rotation_rad_vel_mean",
+    "head_rotation_rad_vel_std",
+    "head_rotation_rad_vel_median",
+    "head_rotation_rad_vel_p25",
+    "head_rotation_rad_vel_p75",
+    "head_rotation_rad_vel_autocorr1",
+    "head_rotation_rad_acc_min",
+    "head_rotation_rad_acc_max",
+    "head_rotation_rad_acc_mean",
+    "head_rotation_rad_acc_std",
+    "head_rotation_rad_acc_median",
+    "head_rotation_rad_acc_p75",
+    "head_rotation_rad_acc_autocorr1",
+    "head_tx_vel_mean",
+    "head_tx_vel_median",
+    "head_tx_vel_p25",
+    "head_tx_vel_autocorr1",
+    "head_tx_acc_median",
+    "head_tx_acc_p75",
+    "head_tx_acc_autocorr1",
+    "head_ty_vel_max",
+    "head_ty_vel_mean",
+    "head_ty_vel_median",
+    "head_ty_vel_autocorr1",
+    "head_ty_acc_max",
+    "head_ty_acc_mean",
+    "head_ty_acc_std",
+    "head_ty_acc_median",
+    "head_ty_acc_p75",
+    "head_ty_acc_autocorr1",
+    "head_scalex_vel_mean",
+    "head_scalex_vel_median",
+    "head_scalex_vel_autocorr1",
+    "head_scalex_acc_mean",
+    "head_scalex_acc_median",
+    "head_scalex_acc_p75",
+    "head_scalex_acc_autocorr1",
+    "head_scaley_vel_min",
+    "head_scaley_vel_mean",
+    "head_scaley_vel_std",
+    "head_scaley_vel_median",
+    "head_scaley_vel_p25",
+    "head_scaley_vel_p75",
+    "head_scaley_vel_autocorr1",
+    "head_scaley_acc_max",
+    "head_scaley_acc_mean",
+    "head_scaley_acc_std",
+    "head_scaley_acc_median",
+    "head_scaley_acc_p75",
+    "head_scaley_acc_autocorr1",
+    "head_motion_mag_vel_mean",
+    "head_motion_mag_vel_median",
+    "head_motion_mag_vel_autocorr1",
+    "head_motion_mag_acc_mean",
+    "head_motion_mag_acc_std",
+    "head_motion_mag_acc_median",
+    "head_motion_mag_acc_p75",
+    "head_motion_mag_acc_autocorr1",
+    "blink_aperture_vel_min",
+    "blink_aperture_vel_max",
+    "blink_aperture_vel_mean",
+    "blink_aperture_vel_median",
+    "blink_aperture_vel_p25",
+    "blink_aperture_vel_autocorr1",
+    "blink_aperture_acc_min",
+    "blink_aperture_acc_max",
+    "blink_aperture_acc_mean",
+    "blink_aperture_acc_std",
+    "blink_aperture_acc_median",
+    "blink_aperture_acc_p75",
+    "blink_aperture_acc_autocorr1",
+    "mouth_aperture_vel_min",
+    "mouth_aperture_vel_mean",
+    "mouth_aperture_vel_median",
+    "mouth_aperture_acc_min",
+    "mouth_aperture_acc_max",
+    "mouth_aperture_acc_mean",
+    "mouth_aperture_acc_std",
+    "mouth_aperture_acc_median",
+    "mouth_aperture_acc_p75",
+    "mouth_aperture_acc_autocorr1",
+    "pupil_dx_vel_mean",
+    "pupil_dx_vel_median",
+    "pupil_dx_acc_min",
+    "pupil_dx_acc_max",
+    "pupil_dx_acc_mean",
+    "pupil_dx_acc_std",
+    "pupil_dx_acc_median",
+    "pupil_dx_acc_p75",
+    "pupil_dx_acc_autocorr1",
+    "pupil_dy_vel_max",
+    "pupil_dy_vel_mean",
+    "pupil_dy_vel_median",
+    "pupil_dy_acc_min",
+    "pupil_dy_acc_max",
+    "pupil_dy_acc_mean",
+    "pupil_dy_acc_std",
+    "pupil_dy_acc_median",
+    "pupil_dy_acc_p75",
+    "pupil_dy_acc_autocorr1",
+    "pupil_metric_vel_max",
+    "pupil_metric_vel_mean",
+    "pupil_metric_vel_std",
+    "pupil_metric_vel_median",
+    "pupil_metric_vel_autocorr1",
+    "pupil_metric_acc_min",
+    "pupil_metric_acc_max",
+    "pupil_metric_acc_mean",
+    "pupil_metric_acc_std",
+    "pupil_metric_acc_median",
+    "pupil_metric_acc_p75",
+    "pupil_metric_acc_autocorr1",
+    "sysmon_failure_rate",
+    "sysmon_average_reaction_times",
+    "comms_failure_rate",
+    "comms_events",
+    "comms_own_events",
+    "comms_average_reaction_times",
+    "track_failure_rate",
+    "resman_failure_rate",
+    "average_accuracy",
+    "average_reaction_time",
+    "pct_missing",
+    "mean_vel",
+    "max_vel",
+    "mean_acc",
+    "rms_disp",
+    "fix_mean_dur",
+    "fix_rate",
+    "blink_mean_dur",
+    "blink_rate",
+    "sac_rate",
+    "t_end_sec",
+    "SCR_Peaks_N",
+    "SCR_Peaks_Amplitude_Mean",
+    "EDA_Tonic_SD",
+    "EDA_Autocorrelation"
+  ],
+  "n_participants": 40,
+  "n_seeds": 20,
+  "n_features": 200,
+  "timestamp": "2025-10-18T16:57:20.685635"
+}

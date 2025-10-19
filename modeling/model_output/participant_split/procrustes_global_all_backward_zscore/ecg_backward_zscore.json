@@ -1,0 +1,87 @@
+{
+  "name": "ecg",
+  "config": {
+    "n_seeds": 20,
+    "feature_selection": "backward",
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "include_order": false,
+    "normalize_features": true,
+    "class_config": "all",
+    "use_pca": false,
+    "pca_variance": 0.9,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "name": "ecg",
+    "feature_groups": [
+      "ecg"
+    ],
+    "split_strategy": "participant"
+  },
+  "metrics": {
+    "test_acc_mean": 0.3687326249202342,
+    "test_acc_std": 0.03773053597598657,
+    "test_bal_acc_mean": 0.3685144485144485,
+    "test_bal_acc_std": 0.037665022215391794,
+    "test_f1_mean": 0.3591795569698923,
+    "test_f1_std": 0.03936654924415437,
+    "test_kappa_mean": 0.052906565518140256,
+    "test_kappa_std": 0.056649132612608,
+    "test_precision_L_mean": 0.3693900795352356,
+    "test_precision_L_std": 0.055514527740571314,
+    "test_recall_L_mean": 0.46785714285714286,
+    "test_recall_L_std": 0.13567275254000893,
+    "test_f1_L_mean": 0.40665769899150883,
+    "test_f1_L_std": 0.08866044341836836,
+    "test_precision_M_mean": 0.3580773071439709,
+    "test_precision_M_std": 0.06663531672059221,
+    "test_recall_M_mean": 0.29801587301587296,
+    "test_recall_M_std": 0.08028353271153195,
+    "test_f1_M_mean": 0.32135054848900546,
+    "test_f1_M_std": 0.06700186372822771,
+    "test_precision_H_mean": 0.3691822801984642,
+    "test_precision_H_std": 0.05408228287632648,
+    "test_recall_H_mean": 0.3396703296703297,
+    "test_recall_H_std": 0.10596719364495925,
+    "test_f1_H_mean": 0.34838668833556163,
+    "test_f1_H_std": 0.07185502276804527
+  },
+  "confusion_matrix": [
+    [
+      46.78571428571429,
+      23.849206349206348,
+      29.36507936507936
+    ],
+    [
+      40.301587301587304,
+      29.8015873015873,
+      29.8968253968254
+    ],
+    [
+      36.98901098901099,
+      29.043956043956047,
+      33.967032967032964
+    ]
+  ],
+  "selected_features": [
+    "HRV_Prc20NN",
+    "HRV_pNN20",
+    "HRV_MinNN",
+    "HRV_VHF",
+    "HRV_CSI",
+    "HRV_CVI",
+    "HRV_PSS",
+    "HRV_PAS",
+    "HRV_C2a",
+    "HRV_MFDFA_alpha1_Width",
+    "HRV_ApEn",
+    "HRV_ShanEn",
+    "HRV_RCMSEn"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 13,
+  "n_seeds": 20,
+  "timestamp": "2025-10-18T12:08:03.782140"
+}

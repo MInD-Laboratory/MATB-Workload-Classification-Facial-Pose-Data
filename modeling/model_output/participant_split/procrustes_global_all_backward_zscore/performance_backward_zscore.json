@@ -1,0 +1,84 @@
+{
+  "name": "performance",
+  "config": {
+    "n_seeds": 20,
+    "feature_selection": "backward",
+    "use_pose_derivatives": true,
+    "use_time_features": false,
+    "include_order": false,
+    "normalize_features": true,
+    "class_config": "all",
+    "use_pca": false,
+    "pca_variance": 0.9,
+    "write_cm": true,
+    "tune_hyperparameters": false,
+    "tune_n_iter": 30,
+    "tune_cv_folds": 5,
+    "name": "performance",
+    "feature_groups": [
+      "performance"
+    ],
+    "split_strategy": "participant"
+  },
+  "metrics": {
+    "test_acc_mean": 0.71875,
+    "test_acc_std": 0.038751585098268294,
+    "test_bal_acc_mean": 0.71875,
+    "test_bal_acc_std": 0.038751585098268274,
+    "test_f1_mean": 0.7204107753850362,
+    "test_f1_std": 0.03889109067337726,
+    "test_kappa_mean": 0.5781250000000002,
+    "test_kappa_std": 0.05812737764740245,
+    "test_precision_L_mean": 0.8664319136958367,
+    "test_precision_L_std": 0.045330446632975446,
+    "test_recall_L_mean": 0.7291666666666666,
+    "test_recall_L_std": 0.032724706763369756,
+    "test_f1_L_mean": 0.7908271662557121,
+    "test_f1_L_std": 0.024050943053194548,
+    "test_precision_M_mean": 0.6140686048127366,
+    "test_precision_M_std": 0.05063242571019851,
+    "test_recall_M_mean": 0.6791666666666667,
+    "test_recall_M_std": 0.09511073878158526,
+    "test_f1_M_mean": 0.6408560875676977,
+    "test_f1_M_std": 0.053130796555702686,
+    "test_precision_H_mean": 0.7280957229455778,
+    "test_precision_H_std": 0.07762448448353024,
+    "test_recall_H_mean": 0.7479166666666668,
+    "test_recall_H_std": 0.12036357568167037,
+    "test_f1_H_mean": 0.7295490723316989,
+    "test_f1_H_std": 0.0631316539911205
+  },
+  "confusion_matrix": [
+    [
+      72.91666666666666,
+      22.583333333333332,
+      4.5
+    ],
+    [
+      7.125,
+      67.91666666666667,
+      24.95833333333333
+    ],
+    [
+      4.374999999999998,
+      20.833333333333336,
+      74.79166666666667
+    ]
+  ],
+  "selected_features": [
+    "sysmon_failure_rate",
+    "sysmon_average_reaction_times",
+    "comms_failure_rate",
+    "comms_events",
+    "comms_own_events",
+    "comms_average_reaction_times",
+    "track_failure_rate",
+    "resman_failure_rate",
+    "average_accuracy",
+    "average_reaction_time"
+  ],
+  "tuned_rf_params": {},
+  "n_features": 10,
+  "n_seeds": 20,
+  "timestamp": "2025-10-18T13:49:46.340855"
+}

@@ -657,7 +657,7 @@ def drop_identifier_columns(df, use_pose_derivatives=True, use_time_features=Fal
     if not use_pose_derivatives:
         derivative_cols = [c for c in df_clean.columns if '_vel_' in c or '_acc_' in c]
         if derivative_cols:
-            print(f"  Excluding {len(derivative_cols)} pose derivative features (vel/acc)")
+            # print(f"  Excluding {len(derivative_cols)} pose derivative features (vel/acc)")
             df_clean = df_clean.drop(columns=derivative_cols, errors="ignore")
 
     # Replace inf values with NaN, then fill NaN with 0

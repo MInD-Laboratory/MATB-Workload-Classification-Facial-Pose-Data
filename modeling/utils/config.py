@@ -70,7 +70,8 @@ OUTPUT_BASE = Path("model_output")
 
 RF_PARAMS = {
     "n_estimators": 500,
-    "max_depth": 30,
+    "max_depth": 30
+    ,
     "class_weight": "balanced",
     "min_samples_split": 5,
     "min_samples_leaf": 2,
@@ -84,7 +85,7 @@ RF_PARAMS = {
 
 DEFAULT_MODEL_CONFIG = {
     "n_seeds": 20,  # Number of random seeds for reliability (random/participant splits and participant-specific sampling)
-    "feature_selection": "backward",    # Options: "backward", "forward", None
+    "feature_selection": "none",    # Options: "backward", "forward", None
     "use_pose_derivatives": True,  # Include velocity/acceleration features from pose
     "use_time_features": False,         # Include temporal position features (normalized time)
     "include_order": False,             # Include condition order (LMH vs LHM) as feature

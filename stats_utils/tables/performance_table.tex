@@ -1,0 +1,32 @@
+\begin{longtable}{l c c c c c c}
+\caption{Statistical analysis of task performance features across workload conditions.} \label{tab:performance_stats} \\
+\hline
+Feature & Low & Moderate & High & \textit{p} L vs M & \textit{p} L vs H & \textit{p} M vs H \\
+\hline
+\endfirsthead
+
+\multicolumn{7}{c}
+{\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
+\hline
+Feature & Low & Moderate & High & \textit{p} L vs M & \textit{p} L vs H & \textit{p} M vs H \\
+\hline
+\endhead
+
+\hline \multicolumn{7}{r}{\textit{Continued on next page}} \\
+\endfoot
+
+\hline
+\multicolumn{7}{l}{\textit{Note: Values shown as Mean $\pm$ SD. Significance: * $p < 0.05$, ** $p < 0.01$, *** $p < 0.001$.}} \\
+\endlastfoot
+
+sysmon\_failure\_rate & 6.18 $\pm$ 13.57 & 6.65 $\pm$ 13.48 & 11.42 $\pm$ 14.46 & 0.776 & <0.001*** & <0.001*** \\
+sysmon\_average\_reaction\_times & 1434.02 $\pm$ 2082.28 & 2941.90 $\pm$ 1535.57 & 3256.16 $\pm$ 1549.11 & <0.001*** & <0.001*** & 0.003** \\
+comms\_failure\_rate & 4.59 $\pm$ 13.00 & 2.12 $\pm$ 8.65 & 6.42 $\pm$ 13.86 & <0.001*** & 0.011* & <0.001*** \\
+comms\_events & 3.00 $\pm$ 0.56 & 3.02 $\pm$ 0.52 & 3.00 $\pm$ 0.55 & 0.688 & 1.000 & 0.688 \\
+comms\_own\_events & 1.07 $\pm$ 0.57 & 1.02 $\pm$ 0.57 & 1.07 $\pm$ 0.44 & 0.323 & 1.000 & 0.323 \\
+comms\_average\_reaction\_times & 3033.67 $\pm$ 4185.31 & 2940.53 $\pm$ 4029.29 & 2347.91 $\pm$ 4162.89 & 0.911 & 0.007** & 0.025* \\
+track\_failure\_rate & 27.55 $\pm$ 20.48 & 36.45 $\pm$ 21.73 & 61.29 $\pm$ 22.48 & <0.001*** & <0.001*** & <0.001*** \\
+resman\_failure\_rate & 27.87 $\pm$ 35.58 & 46.22 $\pm$ 41.93 & 82.01 $\pm$ 33.91 & <0.001*** & <0.001*** & <0.001*** \\
+average\_accuracy & 83.45 $\pm$ 13.50 & 77.14 $\pm$ 14.82 & 59.71 $\pm$ 14.03 & <0.001*** & <0.001*** & <0.001*** \\
+average\_reaction\_time & 2.23 $\pm$ 2.42 & 2.94 $\pm$ 2.17 & 2.80 $\pm$ 2.16 & <0.001*** & <0.001*** & 0.500 \\
+\end{longtable}

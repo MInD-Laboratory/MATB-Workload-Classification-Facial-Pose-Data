@@ -135,7 +135,7 @@ def barplot_ax(ax, means, sems, pvals,
         stars = '***' if p < .001 else '**' if p < .01 else '*'
         ax.text((x[i]+x[j])/2, y+0.25*line_h, stars,
                 ha='center', va='bottom',
-                fontsize=10, fontweight='bold',
+                fontsize=8, fontweight='bold',
                 color='black', clip_on=False)
     ax.set_xlim(-0.5, len(means)-0.5)
     ax.set_xticks([])

@@ -15,6 +15,8 @@ __pycache__
 */data/summary_data/*
 */data/figures/*
 */data/models/*
+*/data/*
+*/*_data
 */_old/*
 */.ipynb_checkpoints/*
 */.vscode/*
@@ -22,3 +24,5 @@ __pycache__
 *.log
 .DS_Store
 */modeling/figures/*
+MATB_performance/matb_outputs
+Pose/utils/__pycache__/*

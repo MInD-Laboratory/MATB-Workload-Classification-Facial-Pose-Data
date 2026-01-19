@@ -175,10 +175,10 @@ The facial pose analysis pipeline includes:
 ### Quick Run Example - POSE Analysis
 ```bash
 # Navigate to pose directory
-cd pose
+cd Pose
 
 # Run the complete processing pipeline
-python pose_processing_pipeline.py
+python process_pose_data.py
 
 # Visualise the analysis pipline using interactive Jupyter notebook
 jupyter notebook pose_processing_visualisation.ipynb
@@ -235,6 +235,8 @@ gsr/data/
     ├── 3208_session01.csv        # Participant 3208, Session 1
     └── ...
 ```
+
+The data can be downloaded from the associated OSF repository. 
 
 ## Citation
 

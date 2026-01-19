@@ -110,7 +110,7 @@ pip install -r requirements.txt
 conda install -c conda-forge r-base rpy2
 
 # Install required R packages for mixed-effects modeling
-R -e "install.packages(c('lmerTest', 'emmeans'), repos='https://cloud.r-project.org')"
+R -e "install.packages(c('lmerTest', 'emmeans', 'pbkrtest'), repos='https://cloud.r-project.org')"
 ```
 
 #### 4. Verify Installation

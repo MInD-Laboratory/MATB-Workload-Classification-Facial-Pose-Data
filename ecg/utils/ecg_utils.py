@@ -437,6 +437,7 @@ def extract_windowed_hrv_features(
         - window_index: Window number
         - t_start_sec: Start time in seconds
         - t_end_sec: End time in seconds
+        - heart_rate_mean: Mean heart rate in the window (from ECG_Rate signal)
         - All HRV features (time, frequency, non-linear domains)
 
     Example:
@@ -487,6 +488,9 @@ def extract_windowed_hrv_features(
         window_rpeaks_local = [r - start for r in window_rpeaks]
 
         try:
+            # Calculate mean heart rate from ECG_Rate signal in this window
+            window_hr_mean = signals['ECG_Rate'].iloc[start:end].mean()
+
             # Extract HRV features for this window
             # Time domain
             hrv_time = nk.hrv_time(window_rpeaks_local, sampling_rate=sr, show=False)
@@ -512,6 +516,7 @@ def extract_windowed_hrv_features(
             features['window_index'] = widx
             features['t_start_sec'] = start / sr
             features['t_end_sec'] = end / sr
+            features['heart_rate_mean'] = window_hr_mean
 
             window_features.append(features)
 
@@ -526,7 +531,7 @@ def extract_windowed_hrv_features(
     result = pd.concat(window_features, ignore_index=True)
 
     # Reorder columns: metadata first, then features
-    metadata_cols = ['window_index', 't_start_sec', 't_end_sec']
+    metadata_cols = ['window_index', 't_start_sec', 't_end_sec', 'heart_rate_mean']
     feature_cols = [c for c in result.columns if c not in metadata_cols]
     result = result[metadata_cols + feature_cols]
 

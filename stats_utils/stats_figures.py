@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from matplotlib.patches import Patch
-from matplotlib.ticker import MaxNLocator, FormatStrFormatter
+from matplotlib.ticker import MaxNLocator, FormatStrFormatter, AutoLocator
 
 import rpy2.robjects as robjects
 from rpy2.robjects import pandas2ri
@@ -141,9 +141,21 @@ def barplot_ax(ax, means, sems, pvals,
     ax.set_xticks([])
     wrapped_ylabel = "\n".join(textwrap.wrap(ylabel, width=25))
     ax.set_ylabel(wrapped_ylabel, fontsize=10)
-    ax.set_ylim(y_min - ylim_padding[0]*y_span, y_max + ylim_padding[1]*y_span + len(sig_pairs)*h_step)
-    ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%.0f' if max(uppers) > 99 else '%.1f' if max(uppers) > 9 else '%.2f'))
+    
+    y_min_limit = y_min - ylim_padding[0]*y_span
+    y_max_limit = y_max + ylim_padding[1]*y_span + len(sig_pairs)*h_step
+    ax.set_ylim(y_min_limit, y_max_limit)
+    
+    # Use AutoLocator which handles various scales better than MaxNLocator
+    from matplotlib.ticker import AutoLocator
+    ax.yaxis.set_major_locator(AutoLocator())
+    
+    # Format with more decimal places to distinguish values
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.3f' if max(uppers) < 1 else '%.2f' if max(uppers) < 10 else '%.1f' if max(uppers) < 100 else '%.0f'))
+    
+    # Draw the figure to refresh tick calculations
+    ax.figure.canvas.draw()
+    
     ax.spines[['top','right']].set_visible(False)
     for spine in ax.spines.values():
         spine.set_linewidth(1.4)

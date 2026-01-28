@@ -31,7 +31,7 @@ from tqdm import tqdm
 import sys
 
 # Add parent directory to path for imports
-sys.path.append('..')
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.config import CFG
 from utils.gsr_utils import (
@@ -154,6 +154,18 @@ def process_single_file(
                 'filename': filename,
                 'participant': participant_id
             }
+
+        # Add heart rate mean feature if ECG_Rate is available
+        if 'ECG_Rate' in signals.columns:
+            window_size = int(CFG.WINDOW_SECONDS * CFG.SAMPLE_RATE)
+            step_size = int(window_size * (1 - CFG.WINDOW_OVERLAP))
+            heart_rate_means = []
+            
+            for i in range(0, len(signals) - window_size + 1, step_size):
+                window_hr = signals['ECG_Rate'].iloc[i:i+window_size].mean()
+                heart_rate_means.append(window_hr)
+            
+            eda_features['heart_rate_mean'] = heart_rate_means
 
         # Add metadata to features (participant, condition, filename)
         eda_features['participant'] = participant_id

@@ -236,7 +236,13 @@ gsr/data/
     └── ...
 ```
 
-The data can be downloaded from the associated OSF repository. 
+### Download Data
+
+The complete dataset can be downloaded from the Open Science Framework (OSF) repository:
+
+**🔗 [Download Data from OSF](https://osf.io/q43gd/overview?view_only=679ad28c18de4817b28936d053df3fb3)**
+
+After downloading, place the data files in the appropriate directories as shown in the structure above.
 
 ## Citation
 

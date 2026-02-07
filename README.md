@@ -7,6 +7,7 @@
 This project analyzes how different measures of human behavior and physiology change during tasks with different levels of mental workload (Low, Medium, High).
 
 We process data from:
+
 - **Facial movements** - How your face moves and expressions change
 - **Heart activity** - Heart rate patterns and variability
 - **Skin conductance** - Electrical activity on the skin (related to stress/arousal)
@@ -161,18 +162,21 @@ MATB-Workload-Classification-Facial-Pose-Data/
 The facial pose analysis pipeline includes:
 
 ### Processing Pipeline
+
 - **8-step automated processing** from raw OpenPose data to analysis-ready features
 - **3 normalization approaches**: Original, Procrustes Global, Procrustes Participant
 - **Smart skip logic** - automatically detects and skips completed steps
 - **Robust error handling** and progress tracking
 
 ### Key Features
+
 - **Behavioral metrics**: Head rotation, blink patterns, mouth movements, head displacement
 - **Motion statistics**: Velocity, acceleration, RMS for all features
 - **Statistical analysis**: Mixed-effects models with R integration
 - **Publication-ready plots** with significance testing
 
 ### Quick Run Example - POSE Analysis
+
 ```bash
 # Navigate to pose directory
 cd Pose
@@ -187,6 +191,7 @@ jupyter notebook pose_processing_visualisation.ipynb
 ## Documentation
 
 Each analysis module contains its own detailed README:
+
 - **[Pose Analysis](Pose/README.md)** - Facial landmark processing and feature extraction
 - **[ECG Analysis](ecg/README.md)** - Heart rate variability analysis
 - **[GSR Analysis](gsr/README.md)** - Galvanic skin response processing
@@ -196,7 +201,8 @@ Each analysis module contains its own detailed README:
 - **[Stats Utilities](stats_utils/README.md)** - Statistical analysis utilities
 
 ### Interactive Notebooks
-- **[Pose Processing & Visualization](Pose/pose_processing_visualisation.ipynb)** - Complete pipeline walkthrough with visualizations
+
+- **[Pose Processing &amp; Visualization](Pose/pose_processing_visualisation.ipynb)** - Complete pipeline walkthrough with visualizations
 - **[Pose Statistical Analysis](Pose/pose_stats_figures.ipynb)** - Publication-ready statistical plots
 - **[ECG Analysis](ecg/ecg_analysis.ipynb)** - ECG processing and HRV analysis
 - **[GSR Analysis](gsr/gsr_analysis.ipynb)** - GSR signal processing and features
@@ -212,25 +218,25 @@ Data files are organized within each module's `data/` directory. The project exp
 data/
 └── participant_info.csv          # Participant metadata and condition mapping
 
-Pose/data/
+data/
 └── pose_data/
     ├── 3101_01_pose.csv          # Participant 3101, Session 1
     ├── 3101_02_pose.csv          # Participant 3101, Session 2
     ├── 3101_03_pose.csv          # Participant 3101, Session 3
     └── ...                       # Additional participants
 
-eye_tracking/data/
+data/
 └── eyelink_data/
     ├── 3105_session01.csv        # Participant 3105, Session 1
     └── ...
 
-ecg/data/
+data/
 └── ecg_data/
     ├── 3105_ecg_session01.csv    # ECG waveform
     ├── 3105_summary_session01.csv # Summary data
     └── ...
 
-gsr/data/
+data/
 └── gsr_data/
     ├── 3208_session01.csv        # Participant 3208, Session 1
     └── ...
